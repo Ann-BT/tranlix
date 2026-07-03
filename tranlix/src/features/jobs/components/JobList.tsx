@@ -1,18 +1,26 @@
 import {
-  Box, Button, CircularProgress, Collapse, Grid, IconButton, 
-  LinearProgress, Paper, Stack, Table, TableBody, TableCell, 
+  Box, Button, Collapse, Grid, IconButton, 
+  Paper, Stack, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Typography,
+  TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel,
+  TablePagination, CircularProgress, Chip
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import DownloadIcon from "@mui/icons-material/Download";
 import ErrorIcon from "@mui/icons-material/Error";
 import HistoryIcon from "@mui/icons-material/History";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import { useNavigate } from "react-router-dom";
+import { TARGET_LANGUAGES } from "@features/translation";
 
-import { jobsApi } from "../api/jobsApi";
 import { useJobs } from "../hooks/useJobs";
 import { JobStatusChip } from "./JobStatusChip";
+import { DownloadMenuButton } from "./DownloadMenuButton";
 import type { Job } from "../types";
 
 function formatDate(dateStr: string): string {
@@ -31,14 +39,31 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function JobRow({ job }: { job: Job }) {
-  const [open, setOpen] = useState(false);
+const formatLanguage = (langCode: string) => {
+  return TARGET_LANGUAGES.find((l) => l.code === langCode)?.label ?? langCode;
+};
 
-  const getProgressColor = () => {
-    if (job.status === "failed") return "error";
-    if (job.status === "completed") return "success";
-    return "info";
-  };
+const getDurationText = (job: Job) => {
+  const start = new Date(job.created_at).getTime();
+  const end = new Date(job.updated_at).getTime();
+  const diffMs = end - start;
+  if (isNaN(diffMs) || diffMs < 0) return "---";
+  
+  const diffSecs = Math.floor(diffMs / 1000);
+  if (diffSecs < 60) return `${diffSecs} giây`;
+  
+  const diffMins = Math.floor(diffSecs / 60);
+  const remSecs = diffSecs % 60;
+  return `${diffMins} phút ${remSecs} giây`;
+};
+
+interface JobRowProps {
+  job: Job;
+  onCompare: (job: Job) => void;
+}
+
+function JobRow({ job, onCompare }: JobRowProps) {
+  const [open, setOpen] = useState(false);
 
   return (
     <>
@@ -60,46 +85,51 @@ function JobRow({ job }: { job: Job }) {
         <TableCell sx={{ fontWeight: 600, fontFamily: '"Lexend", sans-serif', color: "text.primary" }}>
           {job.source_filename}
         </TableCell>
-        <TableCell sx={{ fontWeight: 500 }}>{job.target_lang}</TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>{formatLanguage(job.target_lang)}</TableCell>
         <TableCell>
           <JobStatusChip status={job.status} />
         </TableCell>
-        <TableCell sx={{ width: 180 }}>
-          <Stack spacing={0.5} component="div">
-            <LinearProgress 
-              variant="determinate" 
-              value={job.progress} 
-              color={getProgressColor()}
-              sx={{ height: 6, borderRadius: 3, bgcolor: "rgba(0,0,0,0.05)" }}
-            />
-            <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
-              {job.progress}%
-            </Typography>
-          </Stack>
-        </TableCell>
-        <TableCell align="right" sx={{ width: 120 }}>
+
+        <TableCell align="right" sx={{ width: 280, minWidth: 280, whiteSpace: "nowrap" }}>
           {job.status === "completed" && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="primary"
-              startIcon={<DownloadIcon />}
-              href={jobsApi.downloadUrl(job.id)}
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                fontWeight: 600,
-                borderRadius: "6px",
-                textTransform: "none",
-                py: 0.5,
-              }}
-            >
-              Tải về
-            </Button>
+            <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", flexWrap: "nowrap" }}>
+              <Button
+                size="small"
+                variant="outlined"
+                color="secondary"
+                startIcon={<CompareArrowsIcon />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCompare(job);
+                }}
+                sx={{
+                  fontWeight: 600,
+                  borderRadius: "6px",
+                  textTransform: "none",
+                  py: 0.5,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                So sánh
+              </Button>
+              <DownloadMenuButton
+                job={job}
+                sx={{
+                  fontWeight: 600,
+                  borderRadius: "6px",
+                  textTransform: "none",
+                  py: 0.5,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              />
+            </Box>
           )}
         </TableCell>
       </TableRow>
       <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 2, py: 1 }}>
               <Typography 
@@ -116,7 +146,7 @@ function JobRow({ job }: { job: Job }) {
                 Thông tin chi tiết
               </Typography>
               <Grid container spacing={3} sx={{ mb: 1 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                     Mã công việc (Job ID)
                   </Typography>
@@ -124,30 +154,14 @@ function JobRow({ job }: { job: Job }) {
                     {job.id}
                   </Typography>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                    Chế độ dịch
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 500, color: "text.primary" }}>
-                    {job.inline_mode ? "Inline Mode (Giữ định dạng chữ)" : "Merge Mode (Mặc định)"}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                    Số lượng đoạn (Segments)
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 500, color: "text.primary" }}>
-                    {job.segment_count !== null ? `${job.segment_count} đoạn` : "Đang phân tích..."}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                     Thời gian thực hiện
                   </Typography>
-                  <Typography variant="body2" sx={{ fontSize: "0.85rem", color: "text.primary" }}>
-                    Tạo: {formatDate(job.created_at)}
+                  <Typography variant="body2" sx={{ color: "text.primary" }}>
+                    <strong>Bắt đầu:</strong> {formatDate(job.created_at)}
                     <br />
-                    Cập nhật: {formatDate(job.updated_at)}
+                    <strong>Thời gian chạy:</strong> {job.status === "completed" || job.status === "failed" ? getDurationText(job) : "Đang xử lý..."}
                   </Typography>
                 </Grid>
               </Grid>
@@ -197,6 +211,88 @@ function JobRow({ job }: { job: Job }) {
 
 export function JobList() {
   const { data, isLoading } = useJobs();
+  const navigate = useNavigate();
+
+  // Filter & Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "processing" | "failed">("all");
+  const [langFilter, setLangFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "filename_asc" | "filename_desc">("newest");
+
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  // Dynamic statistics
+  const counts = useMemo(() => {
+    const items = data?.items || [];
+    return {
+      all: items.length,
+      completed: items.filter((j) => j.status === "completed").length,
+      processing: items.filter((j) => j.status === "processing" || j.status === "pending").length,
+      failed: items.filter((j) => j.status === "failed").length,
+    };
+  }, [data?.items]);
+
+  // Unique target languages
+  const targetLanguages = useMemo(() => {
+    const items = data?.items || [];
+    return Array.from(new Set(items.map((j) => j.target_lang))).filter(Boolean);
+  }, [data?.items]);
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setLangFilter("all");
+    setSortBy("newest");
+    setPage(0);
+  };
+
+  // Filtered & Sorted jobs list
+  const filteredJobs = useMemo(() => {
+    if (!data?.items) return [];
+    return data.items
+      .filter((job) => {
+        const matchSearch =
+          job.source_filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.target_lang.toLowerCase().includes(searchQuery.toLowerCase());
+
+        let matchStatus = true;
+        if (statusFilter === "completed") {
+          matchStatus = job.status === "completed";
+        } else if (statusFilter === "processing") {
+          matchStatus = job.status === "processing" || job.status === "pending";
+        } else if (statusFilter === "failed") {
+          matchStatus = job.status === "failed";
+        }
+
+        const matchLang = langFilter === "all" || job.target_lang === langFilter;
+
+        return matchSearch && matchStatus && matchLang;
+      })
+      .sort((a, b) => {
+        if (sortBy === "newest") {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        if (sortBy === "oldest") {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+        if (sortBy === "filename_asc") {
+          return a.source_filename.localeCompare(b.source_filename);
+        }
+        if (sortBy === "filename_desc") {
+          return b.source_filename.localeCompare(a.source_filename);
+        }
+        return 0;
+      });
+  }, [data?.items, searchQuery, statusFilter, langFilter, sortBy]);
+
+  const paginatedJobs = useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    return filteredJobs.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredJobs, page, rowsPerPage]);
 
   if (isLoading) {
     return (
@@ -206,6 +302,7 @@ export function JobList() {
     );
   }
 
+  // If there are no jobs at all on the server
   if (!data?.items.length) {
     return (
       <Paper 
@@ -237,33 +334,291 @@ export function JobList() {
   }
 
   return (
-    <TableContainer 
-      component={Paper} 
-      elevation={0} 
-      sx={{ 
-        border: "1px solid", 
-        borderColor: "divider", 
-        borderRadius: "12px",
-        overflowX: "auto" 
-      }}
-    >
-      <Table aria-label="job history table">
-        <TableHead>
-          <TableRow>
-            <TableCell />
-            <TableCell sx={{ fontWeight: 600 }}>Tên file</TableCell>
-            <TableCell sx={{ fontWeight: 600 }}>Ngôn ngữ dịch</TableCell>
-            <TableCell sx={{ fontWeight: 600 }}>Trạng thái</TableCell>
-            <TableCell sx={{ fontWeight: 600 }}>Tiến độ</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 600 }}>Thao tác</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.items.map((job) => (
-            <JobRow key={job.id} job={job} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Stack spacing={3.5}>
+      {/* Search & Filters Panel */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2.5,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: "12px",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Stack spacing={2}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+              alignItems: "center",
+            }}
+          >
+            {/* Search Field */}
+            <Box sx={{ width: { xs: "100%", md: "50%" } }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Tìm kiếm tên tệp, mã Job..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(0);
+                }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setPage(0);
+                          }}
+                        >
+                          <ClearIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                    bgcolor: "background.default",
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Target Language Dropdown */}
+            <Box sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="lang-select-label" sx={{ fontSize: "0.875rem" }}>Ngôn ngữ dịch</InputLabel>
+                <Select
+                  labelId="lang-select-label"
+                  label="Ngôn ngữ dịch"
+                  value={langFilter}
+                  onChange={(e) => {
+                    setLangFilter(e.target.value);
+                    setPage(0);
+                  }}
+                  sx={{ borderRadius: "8px", bgcolor: "background.default", fontSize: "0.875rem" }}
+                >
+                  <MenuItem value="all">Tất cả ngôn ngữ</MenuItem>
+                  {targetLanguages.map((lang) => (
+                    <MenuItem key={lang} value={lang}>
+                      {formatLanguage(lang)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Sort By Dropdown */}
+            <Box sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="sort-select-label" sx={{ fontSize: "0.875rem" }}>Sắp xếp theo</InputLabel>
+                <Select
+                  labelId="sort-select-label"
+                  label="Sắp xếp theo"
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value as any);
+                    setPage(0);
+                  }}
+                  IconComponent={SwapVertIcon}
+                  sx={{ borderRadius: "8px", bgcolor: "background.default", fontSize: "0.875rem" }}
+                >
+                  <MenuItem value="newest">Mới nhất trước</MenuItem>
+                  <MenuItem value="oldest">Cũ nhất trước</MenuItem>
+                  <MenuItem value="filename_asc">Tên tệp (A-Z)</MenuItem>
+                  <MenuItem value="filename_desc">Tên tệp (Z-A)</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+
+          {/* Status Filter Chips Row */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 1,
+              flexWrap: "wrap",
+              alignItems: "center",
+              mt: 0.5,
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.secondary", mr: 1 }}>
+              Trạng thái:
+            </Typography>
+            <Chip
+              label={`Tất cả (${counts.all})`}
+              onClick={() => {
+                setStatusFilter("all");
+                setPage(0);
+              }}
+              color={statusFilter === "all" ? "primary" : "default"}
+              variant={statusFilter === "all" ? "filled" : "outlined"}
+              sx={{
+                fontWeight: 600,
+                borderRadius: "8px",
+                px: 0.5,
+                cursor: "pointer",
+              }}
+            />
+            <Chip
+              label={`Hoàn thành (${counts.completed})`}
+              onClick={() => {
+                setStatusFilter("completed");
+                setPage(0);
+              }}
+              color={statusFilter === "completed" ? "success" : "default"}
+              variant={statusFilter === "completed" ? "filled" : "outlined"}
+              sx={{
+                fontWeight: 600,
+                borderRadius: "8px",
+                px: 0.5,
+                cursor: "pointer",
+              }}
+            />
+            <Chip
+              label={`Đang xử lý (${counts.processing})`}
+              onClick={() => {
+                setStatusFilter("processing");
+                setPage(0);
+              }}
+              color={statusFilter === "processing" ? "info" : "default"}
+              variant={statusFilter === "processing" ? "filled" : "outlined"}
+              sx={{
+                fontWeight: 600,
+                borderRadius: "8px",
+                px: 0.5,
+                cursor: "pointer",
+              }}
+            />
+            <Chip
+              label={`Lỗi (${counts.failed})`}
+              onClick={() => {
+                setStatusFilter("failed");
+                setPage(0);
+              }}
+              color={statusFilter === "failed" ? "error" : "default"}
+              variant={statusFilter === "failed" ? "filled" : "outlined"}
+              sx={{
+                fontWeight: 600,
+                borderRadius: "8px",
+                px: 0.5,
+                cursor: "pointer",
+              }}
+            />
+          </Box>
+        </Stack>
+      </Paper>
+
+      {/* Main Table or Empty State */}
+      {filteredJobs.length === 0 ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 6,
+            textAlign: "center",
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "12px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <FilterListIcon sx={{ fontSize: 48, color: "text.disabled" }} />
+          <Box>
+            <Typography variant="h6" sx={{ fontFamily: '"Lexend", sans-serif', fontWeight: 600 }}>
+              Không tìm thấy kết quả phù hợp
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Thử thay đổi từ khóa tìm kiếm hoặc các điều kiện bộ lọc.
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleResetFilters}
+              sx={{ textTransform: "none", fontWeight: 600, borderRadius: "6px" }}
+            >
+              Đặt lại bộ lọc
+            </Button>
+          </Box>
+        </Paper>
+      ) : (
+        <>
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: "12px 12px 0 0",
+              overflowX: "auto",
+              overflowY: "auto",
+              maxHeight: "calc(100vh - 530px)",
+            }}
+          >
+            <Table aria-label="job history table" stickyHeader>
+              <TableHead 
+                sx={{ 
+                  bgcolor: "neutral.50",
+                  "& th": {
+                    bgcolor: "neutral.50",
+                  }
+                }}
+              >
+                <TableRow>
+                  <TableCell sx={{ width: 60 }} />
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Tên file</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Ngôn ngữ dịch</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Trạng thái</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif', pr: 3, width: 280, minWidth: 280 }}>Thao tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedJobs.map((job) => (
+                  <JobRow key={job.id} job={job} onCompare={(selectedJob) => navigate(`/compare/${selectedJob.id}`)} />
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component={Paper}
+            elevation={0}
+            sx={{
+              border: "1px solid",
+              borderTop: "none",
+              borderColor: "divider",
+              borderRadius: "0 0 12px 12px",
+            }}
+            count={filteredJobs.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_event, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage="Số dòng mỗi trang:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} trong ${count}`}
+          />
+        </>
+      )}
+    </Stack>
   );
 }

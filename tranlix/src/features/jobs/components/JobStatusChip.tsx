@@ -11,7 +11,7 @@ const COLOR: Record<JobStatus, "warning" | "info" | "success" | "error"> = {
 
 const LABEL: Record<JobStatus, string> = {
   pending: "Chờ xử lý",
-  processing: "Đang dịch",
+  processing: "Đang xử lý",
   completed: "Hoàn thành",
   failed: "Thất bại",
 };
