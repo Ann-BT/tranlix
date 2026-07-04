@@ -4,12 +4,14 @@ export interface CreateTranslationInput {
   file: File;
   targetLang: string;
   inlineMode: boolean;
+  glossaryId?: string;
 }
 
 export type CreatedJob = Job;
 
 export const SUPPORTED_EXTENSIONS = [
   ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls",
+  ".pdf", ".png", ".jpg", ".jpeg",
 ] as const;
 
 export const TARGET_LANGUAGES = [

@@ -26,6 +26,12 @@ function getFileIconAndColor(filename: string) {
   if (ext === ".pptx" || ext === ".ppt") {
     return { icon: <SlideshowIcon sx={{ fontSize: 44 }} />, color: "#C43E1C" }; // PowerPoint Orange
   }
+  if (ext === ".pdf") {
+    return { icon: <ArticleIcon sx={{ fontSize: 44 }} />, color: "#E01B22" }; // PDF Red
+  }
+  if (ext === ".png" || ext === ".jpg" || ext === ".jpeg") {
+    return { icon: <InsertDriveFileIcon sx={{ fontSize: 44 }} />, color: "#8B5CF6" }; // Image Purple
+  }
   return { icon: <InsertDriveFileIcon sx={{ fontSize: 44 }} />, color: "#64748B" }; // Default Grey
 }
 
@@ -173,7 +179,7 @@ export function UploadDropzone({ file, onFile }: Props) {
               color: "text.secondary",
             }}
           >
-            Hỗ trợ: docx, pptx, xlsx, doc, ppt, xls
+            Hỗ trợ: Office (docx, pptx, xlsx, doc, ppt, xls), PDF, Ảnh (png, jpg, jpeg)
           </Typography>
         </Stack>
       )}
