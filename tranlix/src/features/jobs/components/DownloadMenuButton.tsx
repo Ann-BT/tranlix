@@ -29,10 +29,10 @@ function getDownloadOptions(job: Job): DownloadOption[] {
   const ext = getExt(job.source_filename);
 
   if (ext === "pdf") {
-    const options: DownloadOption[] = [{ label: "PDF (bản dịch)", run: jobsApi.download }];
+    const options: DownloadOption[] = [{ label: "PDF", run: jobsApi.download }];
     if (job.has_docx) {
-      options.push({ label: "DOCX (chỉnh sửa được)", run: jobsApi.downloadDocx });
-      options.push({ label: "DOC (định dạng cũ)", run: jobsApi.downloadDocxLegacy });
+      options.push({ label: "DOCX", run: jobsApi.downloadDocx });
+      options.push({ label: "DOC", run: jobsApi.downloadDocxLegacy });
     }
     return options;
   }
@@ -41,8 +41,8 @@ function getDownloadOptions(job: Job): DownloadOption[] {
     const modernExt = LEGACY_TO_MODERN[ext] ?? ext;
     const legacyExt = LEGACY_TO_MODERN[ext] ? ext : { docx: "doc", xlsx: "xls", pptx: "ppt" }[ext];
     return [
-      { label: `Định dạng mới (.${modernExt})`, run: jobsApi.download },
-      { label: `Định dạng cũ (.${legacyExt})`, run: jobsApi.downloadLegacy },
+      { label: `.${modernExt}`, run: jobsApi.download },
+      { label: `.${legacyExt}`, run: jobsApi.downloadLegacy },
     ];
   }
 

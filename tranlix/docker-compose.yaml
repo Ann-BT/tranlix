@@ -1,0 +1,15 @@
+services:
+  frontend:
+    image: tranlix-frontend:${TAG:-latest}
+    build: .
+    ports:
+      - "80:80"
+    # Same external network as tranlix-platform's docker-compose.yml -- needed
+    # so nginx.conf's `proxy_pass http://api:8000` can resolve the backend
+    # "api" service by container DNS name at runtime.
+    networks:
+      - tranlix_net
+
+networks:
+  tranlix_net:
+    external: true

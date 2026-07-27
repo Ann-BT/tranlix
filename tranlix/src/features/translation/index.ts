@@ -1,6 +1,5 @@
 export { TranslationForm } from "./components/TranslationForm";
 export { UploadDropzone } from "./components/UploadDropzone";
 export { LanguageSelect } from "./components/LanguageSelect";
-export { useCreateTranslation } from "./hooks/useCreateTranslation";
-export { TARGET_LANGUAGES, SUPPORTED_EXTENSIONS } from "./types";
-export type { CreateTranslationInput } from "./types";
+export { TopicSelect } from "./components/TopicSelect";
+export { TARGET_LANGUAGES, SUPPORTED_EXTENSIONS, TOPICS } from "./types";

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLogin } from "../hooks/useAuth";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin();
 
@@ -13,11 +13,11 @@ export function LoginForm() {
       component="form"
       onSubmit={(e) => {
         e.preventDefault();
-        login.mutate({ email, password });
+        login.mutate({username, password });
       }}
       sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 360 }}
     >
-      <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <TextField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
       <TextField
         label="Mật khẩu" type="password" value={password}
         onChange={(e) => setPassword(e.target.value)}
