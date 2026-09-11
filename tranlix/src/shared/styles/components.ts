@@ -15,20 +15,20 @@ export const components: Components<Theme> = {
         fontWeight: 600,
         transition: 'all 200ms ease',
         '&:focus-visible': {
-          outline: `3px solid ${colorTokens.teal500}`,
+          outline: `3px solid ${colorTokens.wine500}`,
           outlineOffset: '2px',
         },
         ...(ownerState.variant === 'contained' &&
           ownerState.color === 'primary' && {
-            backgroundColor: colorTokens.teal500,
+            backgroundColor: colorTokens.wine500,
             color: colorTokens.white,
             '&:hover': {
-              backgroundColor: colorTokens.teal600,
+              backgroundColor: colorTokens.wine600,
               opacity: 0.9,
               transform: 'translateY(-1px)',
             },
             '&:active': {
-              backgroundColor: colorTokens.teal700,
+              backgroundColor: colorTokens.wine700,
               opacity: 0.8,
             },
           }),
@@ -75,10 +75,10 @@ export const components: Components<Theme> = {
             borderColor: colorTokens.neutral200,
           },
           '&:hover fieldset': {
-            borderColor: colorTokens.teal500,
+            borderColor: colorTokens.wine500,
           },
           '&.Mui-focused fieldset': {
-            borderColor: colorTokens.teal500,
+            borderColor: colorTokens.wine500,
             borderWidth: '2px',
           },
         },
@@ -95,9 +95,9 @@ export const components: Components<Theme> = {
       head: {
         fontFamily: '"Plus Jakarta Sans", sans-serif',
         fontWeight: 700,
-        color: colorTokens.teal800,
-        backgroundColor: 'rgba(0, 148, 157, 0.04)',
-        borderBottom: `2px solid rgba(0, 148, 157, 0.1)`,
+        color: colorTokens.wine800,
+        backgroundColor: 'rgba(110, 32, 48, 0.04)',
+        borderBottom: `2px solid rgba(110, 32, 48, 0.1)`,
       },
     },
   },
@@ -125,7 +125,7 @@ export const components: Components<Theme> = {
           backgroundColor: colorTokens.neutral100,
         },
         '&:focus-visible': {
-          outline: `3px solid ${colorTokens.teal500}`,
+          outline: `3px solid ${colorTokens.wine500}`,
           outlineOffset: '2px',
         },
       },

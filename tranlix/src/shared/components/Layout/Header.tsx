@@ -149,7 +149,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  color: colorTokens.teal500,
+                  color: colorTokens.wine500,
                   backgroundColor: "rgba(0, 148, 157, 0.04)",
                 },
               }}
@@ -183,7 +183,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 sx={{
                   fontWeight: 700,
                   fontFamily: '"Lexend", sans-serif',
-                  color: colorTokens.teal500,
+                  color: colorTokens.wine500,
                   lineHeight: 1.2,
                   fontSize: "1rem",
                 }}
@@ -216,7 +216,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                     color: colorTokens.neutral600,
                     cursor: "pointer",
                     "&:hover": {
-                      color: colorTokens.teal500,
+                      color: colorTokens.wine500,
                       backgroundColor: "rgba(0, 148, 157, 0.04)",
                     },
                   }}
@@ -267,13 +267,13 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                     sx={{
                       width: 40,
                       height: 40,
-                      bgcolor: colorTokens.teal500,
+                      bgcolor: colorTokens.wine500,
                       color: colorTokens.white,
                       fontSize: "1rem",
                       fontWeight: 600,
                       cursor: "pointer",
                       border: "2px solid",
-                      borderColor: colorTokens.teal100,
+                      borderColor: colorTokens.wine100,
                       boxShadow: "0 2px 8px rgba(0, 148, 157, 0.15)",
                     }}
                   >
@@ -365,14 +365,14 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: colorTokens.teal500,
-                color: colorTokens.teal500,
+                borderColor: colorTokens.wine500,
+                color: colorTokens.wine500,
                 px: 2.5,
                 py: 0.8,
                 transition: "all 0.2s ease",
                 "&:hover": {
                   backgroundColor: "rgba(0, 148, 157, 0.04)",
-                  borderColor: colorTokens.teal600,
+                  borderColor: colorTokens.wine600,
                 },
               }}
             >

@@ -68,6 +68,7 @@ export const TARGET_LANGUAGES = [
   { code: "Korean", label: "Tiếng Hàn" },
   { code: "French", label: "Tiếng Pháp" },
   { code: "Spanish", label: "Tiếng Tây Ban Nha" },
+  { code: "Russian", label: "Tiếng Nga" },
 ] as const;
 
 // Fixed document-topic vocabulary, given to the LLM as translation context

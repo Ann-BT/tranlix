@@ -4,17 +4,17 @@
  */
 
 export const colorTokens = {
-  // Teal scale (primary brand colors)
-  teal50:  '#E6F6F7',
-  teal100: '#CCEDEE',
-  teal200: '#99DCDF',
-  teal300: '#66CACB',
-  teal400: '#33B7B8',
-  teal500: '#00949D',
-  teal600: '#007B82',
-  teal700: '#00676D',
-  teal800: '#004F54',
-  teal900: '#00383D',
+  // Wine scale (primary brand colors — based on #6E2030)
+  wine50:  '#FBE9ED',
+  wine100: '#F5D1D8',
+  wine200: '#EBADBA',
+  wine300: '#DD7E91',
+  wine400: '#B3324C',
+  wine500: '#6E2030',
+  wine600: '#5C1927',
+  wine700: '#49131E',
+  wine800: '#350D15',
+  wine900: '#21080D',
 
   // Blue scale (secondary colors)
   blue50:  '#EAF2F8',

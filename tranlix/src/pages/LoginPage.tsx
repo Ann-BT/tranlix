@@ -76,7 +76,7 @@ export function LoginPage() {
           overflow: "hidden",
           p: 6,
           color: colorTokens.white,
-          backgroundImage: `linear-gradient(135deg, ${colorTokens.blue500} 0%, ${colorTokens.teal500} 100%)`,
+          backgroundImage: `linear-gradient(135deg, ${colorTokens.blue500} 0%, ${colorTokens.wine500} 100%)`,
           "&::before": {
             content: '""',
             position: "absolute",

@@ -59,14 +59,14 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                       px: collapsed ? 0 : 2,
                       py: 1.2,
                       justifyContent: collapsed ? "center" : "flex-start",
-                      backgroundColor: active ? colorTokens.teal500 : "transparent",
+                      backgroundColor: active ? colorTokens.wine500 : "transparent",
                       border: "1px solid",
-                      borderColor: active ? colorTokens.teal500 : "transparent",
+                      borderColor: active ? colorTokens.wine500 : "transparent",
                       color: active ? colorTokens.white : colorTokens.neutral700,
                       boxShadow: active ? "0 4px 12px rgba(0, 148, 157, 0.2)" : "none",
                       transition: "all 150ms ease",
                       "&:hover": {
-                        backgroundColor: active ? colorTokens.teal600 : colorTokens.neutral100,
+                        backgroundColor: active ? colorTokens.wine600 : colorTokens.neutral100,
                         color: active ? colorTokens.white : colorTokens.neutral900,
                         "& .MuiListItemIcon-root": {
                           color: active ? colorTokens.white : colorTokens.neutral800,
