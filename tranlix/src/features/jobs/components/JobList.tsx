@@ -17,6 +17,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { useNavigate } from "react-router-dom";
 import { TARGET_LANGUAGES } from "@features/translation";
+import { formatJobDuration } from "@shared/lib/formatDuration";
 
 import { useJobs } from "../hooks/useJobs";
 import { JobStatusChip } from "./JobStatusChip";
@@ -41,20 +42,6 @@ function formatDate(dateStr: string): string {
 
 const formatLanguage = (langCode: string) => {
   return TARGET_LANGUAGES.find((l) => l.code === langCode)?.label ?? langCode;
-};
-
-const getDurationText = (job: Job) => {
-  const start = new Date(job.created_at).getTime();
-  const end = new Date(job.updated_at).getTime();
-  const diffMs = end - start;
-  if (isNaN(diffMs) || diffMs < 0) return "---";
-  
-  const diffSecs = Math.floor(diffMs / 1000);
-  if (diffSecs < 60) return `${diffSecs} giây`;
-  
-  const diffMins = Math.floor(diffSecs / 60);
-  const remSecs = diffSecs % 60;
-  return `${diffMins} phút ${remSecs} giây`;
 };
 
 interface JobRowProps {
@@ -161,7 +148,7 @@ function JobRow({ job, onCompare }: JobRowProps) {
                   <Typography variant="body2" sx={{ color: "text.primary" }}>
                     <strong>Bắt đầu:</strong> {formatDate(job.created_at)}
                     <br />
-                    <strong>Thời gian chạy:</strong> {job.status === "completed" || job.status === "failed" ? getDurationText(job) : "Đang xử lý..."}
+                    <strong>Thời gian chạy:</strong> {job.status === "completed" || job.status === "failed" ? formatJobDuration(job) : "Đang xử lý..."}
                   </Typography>
                 </Grid>
               </Grid>

@@ -61,9 +61,9 @@ export const palette: PaletteOptions = {
   mode: 'light',
 
   primary: {
-    main: colorTokens.teal500,
-    light: colorTokens.teal50,
-    dark: colorTokens.teal700,
+    main: colorTokens.wine500,
+    light: colorTokens.wine50,
+    dark: colorTokens.wine700,
     contrastText: colorTokens.white,
   },
 

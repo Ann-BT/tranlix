@@ -44,7 +44,7 @@ export function ComparePage() {
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
-        <CircularProgress sx={{ color: colorTokens.teal500 }} />
+        <CircularProgress sx={{ color: colorTokens.wine500 }} />
       </Box>
     );
   }
@@ -148,7 +148,7 @@ export function ComparePage() {
               borderRadius: "8px",
               cursor: "pointer",
               transition: "all 150ms ease",
-              "&:hover": { borderColor: colorTokens.teal500, backgroundColor: colorTokens.teal50 },
+              "&:hover": { borderColor: colorTokens.wine500, backgroundColor: colorTokens.wine50 },
             }}
           >
             <ArrowBack sx={{ fontSize: 20, color: colorTokens.neutral700 }} />
@@ -183,13 +183,13 @@ export function ComparePage() {
             sx={{
               py: 1.2, px: 3, borderRadius: "10px",
               fontFamily: '"Lexend", sans-serif', fontWeight: 600, fontSize: "0.9rem",
-              textTransform: "none", backgroundColor: colorTokens.teal500,
+              textTransform: "none", backgroundColor: colorTokens.wine500,
               color: colorTokens.white,
               border: "none",
               boxShadow: `0 4px 14px rgba(0, 148, 157, 0.25)`,
               transition: "all 150ms ease",
               "&:hover": {
-                backgroundColor: colorTokens.teal600,
+                backgroundColor: colorTokens.wine600,
                 transform: "translateY(-1px)",
                 boxShadow: `0 6px 20px rgba(0, 148, 157, 0.35)`,
               },

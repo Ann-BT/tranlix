@@ -90,10 +90,10 @@ export function NotFoundPage() {
             fontWeight: 600,
             fontSize: "0.95rem",
             textTransform: "none",
-            backgroundColor: colorTokens.teal500,
+            backgroundColor: colorTokens.wine500,
             boxShadow: `0 4px 12px rgba(0, 148, 157, 0.2)`,
             "&:hover": {
-              backgroundColor: colorTokens.teal600,
+              backgroundColor: colorTokens.wine600,
               boxShadow: `0 6px 16px rgba(0, 148, 157, 0.3)`,
             },
           }}

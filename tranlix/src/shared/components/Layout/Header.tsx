@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppBar, Box, Toolbar, Typography, Avatar, IconButton, Menu, MenuItem, Tooltip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import tranlixLogo from "@/core/assets/tranlix.svg";
-import { ExitToApp, HelpOutlined } from "@mui/icons-material";
+import { ExitToApp, HelpOutlined, AdminPanelSettingsOutlined } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { apiClient } from "@/shared/api/client";
 import { colorTokens } from "@/shared/styles/tokens";
@@ -12,6 +12,7 @@ import { colorTokens } from "@/shared/styles/tokens";
 export interface AuthUser {
   fullName: string;
   username: string;
+  isAdmin: boolean;
 }
 
 export interface AuthContextType {
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then((res) => {
           setAuthState({
             isAuthenticated: true,
-            user: { fullName: res.data.full_name, username: res.data.username },
+            user: { fullName: res.data.full_name, username: res.data.username, isAdmin: res.data.is_admin },
           });
         })
         .catch(() => {
@@ -70,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setAuthState({
         isAuthenticated: true,
-        user: { fullName: userData.full_name, username: userData.username },
+        user: { fullName: userData.full_name, username: userData.username, isAdmin: userData.is_admin },
       });
       return true;
     } catch (error) {
@@ -148,7 +149,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  color: colorTokens.teal500,
+                  color: colorTokens.wine500,
                   backgroundColor: "rgba(0, 148, 157, 0.04)",
                 },
               }}
@@ -182,7 +183,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 sx={{
                   fontWeight: 700,
                   fontFamily: '"Lexend", sans-serif',
-                  color: colorTokens.teal500,
+                  color: colorTokens.wine500,
                   lineHeight: 1.2,
                   fontSize: "1rem",
                 }}
@@ -215,7 +216,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                     color: colorTokens.neutral600,
                     cursor: "pointer",
                     "&:hover": {
-                      color: colorTokens.teal500,
+                      color: colorTokens.wine500,
                       backgroundColor: "rgba(0, 148, 157, 0.04)",
                     },
                   }}
@@ -266,13 +267,13 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                     sx={{
                       width: 40,
                       height: 40,
-                      bgcolor: colorTokens.teal500,
+                      bgcolor: colorTokens.wine500,
                       color: colorTokens.white,
                       fontSize: "1rem",
                       fontWeight: 600,
                       cursor: "pointer",
                       border: "2px solid",
-                      borderColor: colorTokens.teal100,
+                      borderColor: colorTokens.wine100,
                       boxShadow: "0 2px 8px rgba(0, 148, 157, 0.15)",
                     }}
                   >
@@ -315,6 +316,24 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                     </Typography>
                   </Box>
                 </MenuItem>
+                {user?.isAdmin && (
+                  <MenuItem
+                    component={RouterLink}
+                    to="/admin/users"
+                    onClick={handleAvatarClose}
+                    sx={{
+                      fontSize: "0.875rem",
+                      borderRadius: "8px",
+                      py: 1,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 148, 157, 0.04)",
+                      },
+                    }}
+                  >
+                    <AdminPanelSettingsOutlined sx={{ fontSize: 20, mr: 1 }} />
+                    Quản trị tài khoản
+                  </MenuItem>
+                )}
                 <Divider sx={{ my: 0.5, borderColor: colorTokens.neutral100 }} />
                 <MenuItem
                   onClick={() => {
@@ -346,14 +365,14 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: colorTokens.teal500,
-                color: colorTokens.teal500,
+                borderColor: colorTokens.wine500,
+                color: colorTokens.wine500,
                 px: 2.5,
                 py: 0.8,
                 transition: "all 0.2s ease",
                 "&:hover": {
                   backgroundColor: "rgba(0, 148, 157, 0.04)",
-                  borderColor: colorTokens.teal600,
+                  borderColor: colorTokens.wine600,
                 },
               }}
             >
@@ -373,7 +392,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           1. Tải lên tài liệu
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
-          Nhấn nút <strong>"Tải lên tài liệu"</strong> ở trang chủ để chọn một hoặc nhiều tệp cần dịch (hỗ trợ .docx, .doc, .pptx, .ppt, .xlsx, .xls, .pdf, .png, .jpg, .jpeg). Bạn có thể tải lên tối đa 3 tệp cùng một lúc.
+          Nhấn nút <strong>"Tải lên tài liệu"</strong> ở trang chủ để chọn một hoặc nhiều tệp cần dịch (hỗ trợ .docx, .doc, .pptx, .ppt, .xlsx, .xls, .pdf). Bạn có thể tải lên tối đa 3 tệp cùng một lúc.
         </Typography>
 
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: colorTokens.neutral800 }}>

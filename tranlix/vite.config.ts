@@ -14,6 +14,11 @@ export default defineConfig({
     },
   },
   server: {
+    // Vite blocks dev-server requests whose Host header isn't localhost by
+    // default (DNS-rebinding protection) -- needed here since the dev
+    // server is reached through this domain (e.g. via a tunnel/reverse
+    // proxy), not directly at localhost.
+    allowedHosts: ['tranlix.andrewphung.id.vn'],
     proxy: {
       '/api': {
         target: 'http://localhost:9000',
