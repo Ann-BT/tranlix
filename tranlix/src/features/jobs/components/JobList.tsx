@@ -3,7 +3,7 @@ import {
   Paper, Stack, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Typography,
   TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel,
-  Pagination, CircularProgress, Chip
+  Pagination, CircularProgress, Chip, Popover
 } from "@mui/material";
 import { useState, useMemo, useRef } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -16,6 +16,8 @@ import ClearIcon from "@mui/icons-material/Clear";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useNavigate } from "react-router-dom";
 import { TARGET_LANGUAGES } from "@features/translation";
 import { formatJobDuration } from "@shared/lib/formatDuration";
@@ -332,7 +334,66 @@ export function JobList() {
   const dayRef = useRef<HTMLInputElement>(null);
   const monthRef = useRef<HTMLInputElement>(null);
   const yearRef = useRef<HTMLInputElement>(null);
-  const calendarRef = useRef<HTMLInputElement>(null);
+
+  // Popover calendar state
+  const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null);
+  const [viewDate, setViewDate] = useState(() => new Date());
+
+  const handleOpenCalendar = (event: React.MouseEvent<HTMLElement>) => {
+    setCalendarAnchor(event.currentTarget);
+    if (dateFilter) {
+      const parsed = new Date(dateFilter);
+      if (!isNaN(parsed.getTime())) setViewDate(parsed);
+    }
+  };
+
+  const handleCloseCalendar = () => {
+    setCalendarAnchor(null);
+  };
+
+  const calendarDays = useMemo(() => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 = Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    const days: { day: number; monthOffset: number; dateStr: string }[] = [];
+
+    // Prev month padding
+    for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+      const prevD = daysInPrevMonth - i;
+      const prevM = month === 0 ? 11 : month - 1;
+      const prevY = month === 0 ? year - 1 : year;
+      const dStr = `${prevY}-${String(prevM + 1).padStart(2, "0")}-${String(prevD).padStart(2, "0")}`;
+      days.push({ day: prevD, monthOffset: -1, dateStr: dStr });
+    }
+
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      days.push({ day: d, monthOffset: 0, dateStr: dStr });
+    }
+
+    // Next month padding to fill 42 slots (6 rows)
+    const remaining = 42 - days.length;
+    for (let d = 1; d <= remaining; d++) {
+      const nextM = month === 11 ? 0 : month + 1;
+      const nextY = month === 11 ? year + 1 : year;
+      const dStr = `${nextY}-${String(nextM + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      days.push({ day: d, monthOffset: 1, dateStr: dStr });
+    }
+
+    return days;
+  }, [viewDate]);
+
+  const selectCalendarDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-");
+    setDateParts({ day: d, month: m, year: y });
+    setDateFilter(dateStr);
+    setPage(0);
+    handleCloseCalendar();
+  };
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "filename_asc" | "filename_desc">("newest");
 
   // Pagination states
@@ -629,6 +690,7 @@ export function JobList() {
                   py: "5px",
                   gap: 0.5,
                   height: "40px",
+                  transition: "border-color 0.2s ease",
                   "&:hover": { borderColor: "text.primary" },
                 }}
               >
@@ -672,40 +734,13 @@ export function JobList() {
                     }}
                   />
                 </Box>
-                {/* Hidden native date input anchored for correct picker popup positioning */}
-                <input
-                  ref={calendarRef}
-                  type="date"
-                  min="2020-01-01"
-                  max={new Date().toISOString().split("T")[0]}
-                  value={dateFilter}
-                  onChange={(e) => {
-                    const val = e.target.value; // yyyy-MM-dd
-                    if (val) {
-                      const [y, m, d] = val.split("-");
-                      setDateParts({ day: d, month: m, year: y });
-                      setDateFilter(val);
-                      setPage(0);
-                    }
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    cursor: "pointer",
-                    pointerEvents: "none",
-                  }}
-                />
-                {/* Calendar icon triggers hidden native date picker */}
-                {!dateFilter && (
-                  <IconButton size="small" sx={{ p: 0.3 }} onClick={() => calendarRef.current?.showPicker?.() ?? calendarRef.current?.click()}>
+
+                {/* Custom Calendar Icon button */}
+                {!dateFilter ? (
+                  <IconButton size="small" sx={{ p: 0.3 }} onClick={handleOpenCalendar}>
                     <CalendarTodayIcon sx={{ fontSize: 15, color: "text.secondary" }} />
                   </IconButton>
-                )}
-                {dateFilter && (
+                ) : (
                   <IconButton
                     size="small"
                     onClick={() => {
@@ -719,6 +754,146 @@ export function JobList() {
                   </IconButton>
                 )}
               </Box>
+
+              {/* Custom Popover Calendar */}
+              <Popover
+                open={Boolean(calendarAnchor)}
+                anchorEl={calendarAnchor}
+                onClose={handleCloseCalendar}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      mt: 1,
+                      p: 2,
+                      width: 280,
+                      borderRadius: "12px",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      boxShadow: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "0 10px 30px rgba(0, 0, 0, 0.6)"
+                          : "0 8px 24px rgba(0, 0, 0, 0.12)",
+                    },
+                  },
+                }}
+              >
+                {/* Month/Year Header */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontFamily: '"Lexend", sans-serif' }}>
+                    Tháng {viewDate.getMonth() + 1}, {viewDate.getFullYear()}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 0.5 }}>
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+                      }
+                      sx={{ p: 0.4 }}
+                    >
+                      <ChevronLeftIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+                      }
+                      sx={{ p: 0.4 }}
+                    >
+                      <ChevronRightIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                {/* Day Names Row */}
+                <Grid container spacing={0.5} sx={{ mb: 1 }}>
+                  {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map((dayName) => (
+                    <Grid size={{ xs: 12 / 7 }} key={dayName} sx={{ textAlign: "center" }}>
+                      <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 700, fontSize: "0.7rem" }}>
+                        {dayName}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Grid of Days */}
+                <Grid container spacing={0.5}>
+                  {calendarDays.map((item, index) => {
+                    const isSelected = dateFilter === item.dateStr;
+                    const isToday = item.dateStr === new Date().toISOString().split("T")[0];
+                    const isOtherMonth = item.monthOffset !== 0;
+
+                    return (
+                      <Grid size={{ xs: 12 / 7 }} key={index} sx={{ textAlign: "center" }}>
+                        <Button
+                          fullWidth
+                          size="small"
+                          onClick={() => selectCalendarDate(item.dateStr)}
+                          sx={{
+                            minWidth: 0,
+                            height: 32,
+                            p: 0,
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: isSelected || isToday ? 700 : 500,
+                            color: isSelected
+                              ? "#FFFFFF"
+                              : isOtherMonth
+                              ? "text.disabled"
+                              : "text.primary",
+                            bgcolor: isSelected
+                              ? "primary.main"
+                              : isToday
+                              ? (theme) =>
+                                  theme.palette.mode === "dark"
+                                    ? "rgba(16, 185, 129, 0.2)"
+                                    : "rgba(16, 185, 129, 0.12)"
+                              : "transparent",
+                            border: isToday && !isSelected ? "1px solid" : "none",
+                            borderColor: "primary.main",
+                            "&:hover": {
+                              bgcolor: isSelected
+                                ? "primary.dark"
+                                : (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.08)"
+                                      : "rgba(0, 0, 0, 0.05)",
+                            },
+                          }}
+                        >
+                          {item.day}
+                        </Button>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+
+                {/* Footer Quick Actions */}
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1.5, pt: 1, borderTop: "1px solid", borderColor: "divider" }}>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setDateFilter("");
+                      setDateParts({ day: "", month: "", year: "" });
+                      setPage(0);
+                      handleCloseCalendar();
+                    }}
+                    sx={{ fontSize: "0.75rem", textTransform: "none", color: "text.secondary" }}
+                  >
+                    Xóa chọn
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => selectCalendarDate(new Date().toISOString().split("T")[0])}
+                    sx={{ fontSize: "0.75rem", textTransform: "none", fontWeight: 700, color: "primary.main" }}
+                  >
+                    Hôm nay
+                  </Button>
+                </Box>
+              </Popover>
+
               {dateParts.day && dateParts.month && dateParts.year && dateParts.year.length === 4 && !dateFilter && (
                 <Typography variant="caption" color="error" sx={{ ml: 0.5, mt: 0.3, display: "block" }}>
                   Ngày không hợp lệ
