@@ -196,7 +196,7 @@ function JobRow({ job, onCompare }: JobRowProps) {
                       bgcolor: "background.paper",
                       display: "flex",
                       flexDirection: "column",
-                      justify"space-between",
+                      justifyContent: "space-between",
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 1, display: "block" }}>
