@@ -618,6 +618,7 @@ export function JobList() {
             <Box sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
               <Box
                 sx={{
+                  position: "relative",
                   border: "1px solid",
                   borderColor: dateFilter ? "primary.main" : "divider",
                   borderRadius: "8px",
@@ -671,6 +672,33 @@ export function JobList() {
                     }}
                   />
                 </Box>
+                {/* Hidden native date input anchored for correct picker popup positioning */}
+                <input
+                  ref={calendarRef}
+                  type="date"
+                  min="2020-01-01"
+                  max={new Date().toISOString().split("T")[0]}
+                  value={dateFilter}
+                  onChange={(e) => {
+                    const val = e.target.value; // yyyy-MM-dd
+                    if (val) {
+                      const [y, m, d] = val.split("-");
+                      setDateParts({ day: d, month: m, year: y });
+                      setDateFilter(val);
+                      setPage(0);
+                    }
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: "100%",
+                    height: "100%",
+                    opacity: 0,
+                    cursor: "pointer",
+                    pointerEvents: "none",
+                  }}
+                />
                 {/* Calendar icon triggers hidden native date picker */}
                 {!dateFilter && (
                   <IconButton size="small" sx={{ p: 0.3 }} onClick={() => calendarRef.current?.showPicker?.() ?? calendarRef.current?.click()}>
@@ -690,24 +718,6 @@ export function JobList() {
                     <ClearIcon sx={{ fontSize: 15 }} />
                   </IconButton>
                 )}
-                {/* Hidden native date input for calendar picker */}
-                <input
-                  ref={calendarRef}
-                  type="date"
-                  min="2020-01-01"
-                  max={new Date().toISOString().split("T")[0]}
-                  value={dateFilter}
-                  onChange={(e) => {
-                    const val = e.target.value; // yyyy-MM-dd
-                    if (val) {
-                      const [y, m, d] = val.split("-");
-                      setDateParts({ day: d, month: m, year: y });
-                      setDateFilter(val);
-                      setPage(0);
-                    }
-                  }}
-                  style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }}
-                />
               </Box>
               {dateParts.day && dateParts.month && dateParts.year && dateParts.year.length === 4 && !dateFilter && (
                 <Typography variant="caption" color="error" sx={{ ml: 0.5, mt: 0.3, display: "block" }}>
