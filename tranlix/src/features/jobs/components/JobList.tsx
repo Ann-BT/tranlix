@@ -195,41 +195,20 @@ function JobRow({ job, onCompare }: JobRowProps) {
                       </Box>
                     </Box>
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Loại tệp:
-                        </Typography>
-                        <Chip
-                          label={getFileTypeLabel(job.source_filename)}
-                          size="small"
-                          sx={{
-                            height: 22,
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            borderRadius: "4px",
-                          }}
-                        />
-                      </Box>
-
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Tên file:
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: 600,
-                            color: "text.primary",
-                            maxWidth: 280,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {job.source_filename}
-                        </Typography>
-                      </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Loại tệp:
+                      </Typography>
+                      <Chip
+                        label={getFileTypeLabel(job.source_filename)}
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          borderRadius: "4px",
+                        }}
+                      />
                     </Box>
                   </Stack>
                 </Grid>
