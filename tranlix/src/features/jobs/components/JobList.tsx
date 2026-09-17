@@ -143,61 +143,155 @@ function JobRow({ job, onCompare }: JobRowProps) {
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ margin: 2, py: 1 }}>
-              <Typography 
-                variant="subtitle2" 
-                gutterBottom 
-                component="div" 
-                sx={{ 
-                  fontFamily: '"Lexend", sans-serif', 
-                  fontWeight: 600, 
-                  color: "secondary.main", 
-                  mb: 2 
+            <Box
+              sx={{
+                p: 2.5,
+                my: 1.5,
+                mx: 1,
+                borderRadius: 2,
+                bgcolor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.03)"
+                    : "rgba(0, 0, 0, 0.02)",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                component="div"
+                sx={{
+                  fontFamily: '"Lexend", sans-serif',
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "primary.main",
+                  mb: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
                 }}
               >
+                <Box
+                  component="span"
+                  sx={{
+                    width: 4,
+                    height: 16,
+                    bgcolor: "primary.main",
+                    borderRadius: 1,
+                    display: "inline-block",
+                  }}
+                />
                 Thông tin chi tiết
               </Typography>
-              <Grid container spacing={3} sx={{ mb: 1 }}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
+
+              <Grid container spacing={2}>
+                {/* Job ID Card */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      height: "100%",
+                      borderRadius: 1.5,
+                      bgcolor: "background.paper",
+                      display: "flex",
+                      flexDirection: "column",
+                      justify"space-between",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 1, display: "block" }}>
                       Mã Job (Job ID)
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 600, fontFamily: "monospace" }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        borderRadius: 1,
+                        bgcolor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? "rgba(255, 255, 255, 0.05)"
+                            : "rgba(0, 0, 0, 0.04)",
+                        fontFamily: '"Fira Code", monospace',
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        wordBreak: "break-all",
+                        color: "text.primary",
+                      }}
+                    >
                       {job.id}
-                    </Typography>
-                  </Box>
+                    </Box>
+                  </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
-                      Loại tệp
+
+                {/* File Type Card */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      height: "100%",
+                      borderRadius: 1.5,
+                      bgcolor: "background.paper",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 1, display: "block" }}>
+                      Loại tệp & Định dạng
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 600, fontSize: "0.9rem" }}>
                       {getFileTypeLabel(job.source_filename)}
                     </Typography>
-                  </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Tên file: {job.source_filename}
+                    </Typography>
+                  </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
-                    Thời gian thực hiện
-                  </Typography>
-                  <Stack spacing={0.4}>
-                    <Typography variant="body2" sx={{ color: "text.primary" }}>
-                      <strong>Bắt đầu:</strong> {formatDate(job.created_at)}
+
+                {/* Processing Timeline Card */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      height: "100%",
+                      borderRadius: 1.5,
+                      bgcolor: "background.paper",
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 1, display: "block" }}>
+                      Thời gian thực hiện
                     </Typography>
-                    {(job.status === "completed" || job.status === "failed") && (
-                      <Typography variant="body2" sx={{ color: "text.primary" }}>
-                        <strong>Hoàn thành:</strong> {formatDate(job.updated_at)}
-                      </Typography>
-                    )}
-                    <Typography variant="body2" sx={{ color: "text.primary" }}>
-                      <strong>Thời gian xử lý:</strong>{" "}
-                      {job.status === "completed" || job.status === "failed"
-                        ? formatJobDuration(job)
-                        : "Đang xử lý..."}
-                    </Typography>
-                  </Stack>
+                    <Stack spacing={0.6}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Typography variant="caption" color="text.secondary">Bắt đầu:</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: "text.primary" }}>
+                          {formatDate(job.created_at)}
+                        </Typography>
+                      </Box>
+                      {(job.status === "completed" || job.status === "failed") && (
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Typography variant="caption" color="text.secondary">Hoàn thành:</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: "text.primary" }}>
+                            {formatDate(job.updated_at)}
+                          </Typography>
+                        </Box>
+                      )}
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pt: 0.5, borderTop: "1px dashed", borderColor: "divider" }}>
+                        <Typography variant="caption" color="text.secondary">Tổng thời gian:</Typography>
+                        <Chip
+                          label={
+                            job.status === "completed" || job.status === "failed"
+                              ? formatJobDuration(job)
+                              : "Đang xử lý..."
+                          }
+                          size="small"
+                          color={job.status === "completed" ? "success" : "default"}
+                          variant="outlined"
+                          sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700 }}
+                        />
+                      </Box>
+                    </Stack>
+                  </Paper>
                 </Grid>
               </Grid>
 
