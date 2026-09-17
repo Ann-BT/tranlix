@@ -158,7 +158,17 @@ function JobRow({ job, onCompare }: JobRowProps) {
                 Thông tin chi tiết
               </Typography>
               <Grid container spacing={3} sx={{ mb: 1 }}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
+                      Mã Job (Job ID)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 600, fontFamily: "monospace" }}>
+                      {job.id}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
                       Loại tệp
@@ -168,7 +178,7 @@ function JobRow({ job, onCompare }: JobRowProps) {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
                     Thời gian thực hiện
                   </Typography>
