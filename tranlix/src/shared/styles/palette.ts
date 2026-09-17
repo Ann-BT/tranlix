@@ -58,34 +58,34 @@ declare module '@mui/material/styles' {
 // ------------------------------------------------------------------
 
 export const palette: PaletteOptions = {
-  mode: 'light',
+  mode: 'dark',
 
   primary: {
-    main: colorTokens.wine500,
-    light: colorTokens.wine50,
-    dark: colorTokens.wine700,
+    main: '#10B981', // Emerald green accent
+    light: '#34D399',
+    dark: '#059669',
     contrastText: colorTokens.white,
   },
 
   secondary: {
-    main: colorTokens.blue500,
-    light: colorTokens.blue50,
-    dark: colorTokens.blue600,
+    main: '#F59E0B', // Warm Amber Accent
+    light: '#FEF3C7',
+    dark: '#D97706',
     contrastText: colorTokens.white,
   },
 
   background: {
-    default: colorTokens.neutral50,
-    paper: colorTokens.white,
+    default: '#030712',
+    paper: '#0B132B',
   },
 
   text: {
-    primary: colorTokens.neutral900,
-    secondary: colorTokens.neutral700,
-    disabled: colorTokens.neutral400,
+    primary: '#FFFFFF',
+    secondary: '#94A3B8',
+    disabled: '#64748B',
   },
 
-  divider: colorTokens.neutral200,
+  divider: 'rgba(255, 255, 255, 0.12)',
 
   // Standard status colors
   success: { main: colorTokens.success },
@@ -99,7 +99,7 @@ export const palette: PaletteOptions = {
     pending: colorTokens.warning,
     processing: colorTokens.info,
     error: colorTokens.error,
-    reviewNeeded: colorTokens.blue500,
+    reviewNeeded: colorTokens.wine500,
   },
 
   // Custom alert tokens

@@ -34,23 +34,39 @@ export function GlossarySelect({ value, onChange, targetLang, disabled }: Props)
   };
 
   return (
-    <FormControl fullWidth size="small" disabled={disabled}>
-      <InputLabel id="glossary-select-label">Bảng thuật ngữ (tùy chọn)</InputLabel>
+    <FormControl
+      fullWidth
+      size="small"
+      disabled={disabled}
+      sx={{
+        "& .MuiInputLabel-root": { color: "text.secondary" },
+        "& .MuiInputLabel-root.Mui-focused": { color: "#10B981", fontWeight: 600 },
+      }}
+    >
+      <InputLabel id="glossary-select-label">Thiết lập thuật ngữ chuyên ngành (tùy chọn)</InputLabel>
       <Select
         labelId="glossary-select-label"
         multiple
         value={value}
         onChange={handleChange}
-        input={<OutlinedInput label="Bảng thuật ngữ (tùy chọn)" />}
+        input={<OutlinedInput label="Thiết lập thuật ngữ chuyên ngành (tùy chọn)" sx={{ borderRadius: "4px" }} />}
         renderValue={(selected) => (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {selected.map((val) => {
               const g = filtered.find((item: any) => item.id === val);
-              return <Chip key={val} label={g ? g.name : val} size="small" />;
+              return <Chip key={val} label={g ? g.name : val} size="small" sx={{ borderRadius: "4px", backgroundColor: "rgba(16, 185, 129, 0.2)", color: "#10B981" }} />;
             })}
           </Box>
         )}
-        sx={{ borderRadius: 2 }}
+        sx={{
+          borderRadius: "4px",
+          color: "text.primary",
+          backgroundColor: (theme) => (theme.palette.mode === "dark" ? "rgba(30, 41, 59, 0.6)" : "rgba(241, 245, 249, 0.8)"),
+          "& .MuiOutlinedInput-notchedOutline": { borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(148, 163, 184, 0.2)" : "rgba(0, 0, 0, 0.15)"), borderRadius: "4px" },
+          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#10B981" },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#10B981" },
+          "& .MuiSvgIcon-root": { color: "text.secondary" },
+        }}
       >
         {filtered.map((g: any) => (
           <MenuItem key={g.id} value={g.id}>

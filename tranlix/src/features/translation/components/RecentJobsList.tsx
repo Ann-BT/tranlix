@@ -55,13 +55,13 @@ export function RecentJobsList({ jobs }: Props) {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        fontFamily: '"Source Sans 3", sans-serif',
+                        fontFamily: '"Lexend", sans-serif',
                       }}
                     >
                       {rj.source_filename}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Dịch sang: {formatLanguage(rj.target_lang)}
+                      Ngôn ngữ: {formatLanguage(rj.target_lang)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -92,17 +92,24 @@ export function RecentJobsList({ jobs }: Props) {
                     <Button
                       size="small"
                       variant="contained"
-                      color="secondary"
                       onClick={() => navigate(`/compare/${rj.id}`)}
                       sx={{
-                        fontWeight: 600,
-                        borderRadius: "6px",
+                        fontWeight: 700,
+                        borderRadius: "8px",
                         textTransform: "none",
-                        py: 0.5,
-                        fontSize: "0.8rem",
+                        py: 0.8,
+                        px: 2.2,
+                        fontSize: "0.85rem",
+                        backgroundColor: "#2563EB",
+                        color: "#FFFFFF",
+                        boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
+                        "&:hover": {
+                          backgroundColor: "#1D4ED8",
+                          boxShadow: "0 6px 18px rgba(37, 99, 235, 0.45)",
+                        },
                       }}
                     >
-                      So sánh
+                      Tiếp
                     </Button>
                   )}
                 </Grid>

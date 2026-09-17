@@ -1,9 +1,21 @@
 import { useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
-import { Button, Menu, MenuItem } from "@mui/material";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+  ListItemIcon,
+} from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+
 import { jobsApi } from "../api/jobsApi";
 import type { Job } from "../types";
 
@@ -15,38 +27,83 @@ function getExt(filename: string): string {
 }
 
 interface DownloadOption {
-  label: string;
+  title: string;
+  icon: ReactNode;
+  color: string;
   run: (id: string) => Promise<void>;
 }
 
-/** What format choices make sense for this job. PDF Text Layer jobs can
- * export the PDF itself, plus the DOCX companion (and a .doc conversion of
- * it) when one was produced. Office Pipeline jobs can always export both the
- * new OOXML format and a legacy .doc/.xls/.ppt conversion — offered
- * regardless of whether the upload itself was modern or legacy, since old MS
- * Office can't open the new format at all either way. */
+function getFormatIcon(ext: string) {
+  const cleanExt = ext.replace(".", "").toLowerCase();
+  switch (cleanExt) {
+    case "pdf":
+      return { icon: <PictureAsPdfOutlinedIcon fontSize="small" />, color: "#E11D48" };
+    case "docx":
+    case "doc":
+      return { icon: <DescriptionOutlinedIcon fontSize="small" />, color: "#2563EB" };
+    case "xlsx":
+    case "xls":
+      return { icon: <TableChartOutlinedIcon fontSize="small" />, color: "#059669" };
+    case "pptx":
+    case "ppt":
+      return { icon: <SlideshowOutlinedIcon fontSize="small" />, color: "#EA580C" };
+    default:
+      return { icon: <InsertDriveFileOutlinedIcon fontSize="small" />, color: "#64748B" };
+  }
+}
+
 function getDownloadOptions(job: Job): DownloadOption[] {
   const ext = getExt(job.source_filename);
 
   if (ext === "pdf") {
-    const options: DownloadOption[] = [{ label: "PDF", run: jobsApi.download }];
+    const options: DownloadOption[] = [
+      {
+        title: "PDF (Gốc)",
+        ...getFormatIcon("pdf"),
+        run: jobsApi.download,
+      },
+    ];
     if (job.has_docx) {
-      options.push({ label: "DOCX", run: jobsApi.downloadDocx });
-      options.push({ label: "DOC", run: jobsApi.downloadDocxLegacy });
+      options.push({
+        title: "DOCX",
+        ...getFormatIcon("docx"),
+        run: jobsApi.downloadDocx,
+      });
+      options.push({
+        title: "DOC",
+        ...getFormatIcon("doc"),
+        run: jobsApi.downloadDocxLegacy,
+      });
     }
     return options;
   }
 
   if (OFFICE_EXTS.has(ext)) {
     const modernExt = LEGACY_TO_MODERN[ext] ?? ext;
-    const legacyExt = LEGACY_TO_MODERN[ext] ? ext : { docx: "doc", xlsx: "xls", pptx: "ppt" }[ext];
+    const legacyExt = LEGACY_TO_MODERN[ext] ? ext : ({ docx: "doc", xlsx: "xls", pptx: "ppt" }[ext] ?? "doc");
+    const isModernOriginal = ext === modernExt;
+
     return [
-      { label: `.${modernExt}`, run: jobsApi.download },
-      { label: `.${legacyExt}`, run: jobsApi.downloadLegacy },
+      {
+        title: `${modernExt.toUpperCase()}${isModernOriginal ? " (Gốc)" : ""}`,
+        ...getFormatIcon(modernExt),
+        run: jobsApi.download,
+      },
+      {
+        title: `${legacyExt.toUpperCase()}${!isModernOriginal ? " (Gốc)" : ""}`,
+        ...getFormatIcon(legacyExt),
+        run: jobsApi.downloadLegacy,
+      },
     ];
   }
 
-  return [{ label: "Tải về", run: jobsApi.download }];
+  return [
+    {
+      title: `${(ext || "file").toUpperCase()} (Gốc)`,
+      ...getFormatIcon(ext),
+      run: jobsApi.download,
+    },
+  ];
 }
 
 interface DownloadMenuButtonProps {
@@ -58,7 +115,11 @@ interface DownloadMenuButtonProps {
 }
 
 export function DownloadMenuButton({
-  job, label = "Tải về", size = "small", variant = "contained", sx,
+  job,
+  label = "Tải về",
+  size = "small",
+  variant = "contained",
+  sx,
 }: DownloadMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const options = getDownloadOptions(job);
@@ -69,10 +130,6 @@ export function DownloadMenuButton({
 
   const handleButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (options.length === 1) {
-      runOption(options[0]);
-      return;
-    }
     setAnchorEl(e.currentTarget);
   };
 
@@ -83,7 +140,7 @@ export function DownloadMenuButton({
         variant={variant}
         color="primary"
         startIcon={<DownloadIcon />}
-        endIcon={options.length > 1 ? <ArrowDropDownIcon /> : undefined}
+        endIcon={<ArrowDropDownIcon />}
         onClick={handleButtonClick}
         sx={sx}
       >
@@ -94,16 +151,49 @@ export function DownloadMenuButton({
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
         onClick={(e) => e.stopPropagation()}
+        slotProps={{
+          paper: {
+            elevation: 8,
+            sx: {
+              borderRadius: "10px",
+              minWidth: 160,
+              p: 0.5,
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0 12px 30px rgba(0,0,0,0.6)"
+                  : "0 6px 20px rgba(0,0,0,0.12)",
+            },
+          },
+        }}
       >
         {options.map((option) => (
           <MenuItem
-            key={option.label}
+            key={option.title}
             onClick={() => {
               setAnchorEl(null);
               runOption(option);
             }}
+            sx={{
+              py: 0.8,
+              px: 1.5,
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              transition: "all 150ms ease",
+              "&:hover": {
+                bgcolor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9"),
+              },
+            }}
           >
-            {option.label}
+            <ListItemIcon sx={{ minWidth: "auto", color: option.color }}>
+              {option.icon}
+            </ListItemIcon>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: "text.primary" }}>
+              {option.title}
+            </Typography>
           </MenuItem>
         ))}
       </Menu>

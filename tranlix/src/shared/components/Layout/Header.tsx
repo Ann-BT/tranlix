@@ -1,96 +1,14 @@
-import { useState, createContext, useContext, useEffect } from "react";
-import type { ReactNode } from "react";
-import { AppBar, Box, Toolbar, Typography, Avatar, IconButton, Menu, MenuItem, Tooltip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import tranlixLogo from "@/core/assets/tranlix.svg";
-import { ExitToApp, HelpOutlined, AdminPanelSettingsOutlined } from "@mui/icons-material";
+import { useState } from "react";
+import { AppBar, Box, Toolbar, Typography, Avatar, IconButton, Menu, MenuItem, Tooltip, Divider, Button } from "@mui/material";
+import { Link as RouterLink, useLocation } from "react-router-dom";
+import { ExitToApp, HelpOutlined, ManageAccountsOutlined, LightModeOutlined, DarkModeOutlined } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { apiClient } from "@/shared/api/client";
-import { colorTokens } from "@/shared/styles/tokens";
+import { colorTokens, useColorMode } from "@/shared/styles";
+import { useAuth } from "@/shared/context/AuthContext";
+import { UserGuideDialog } from "@/shared/components/UserGuide/UserGuideDialog";
 
-// Auth context for user state
-export interface AuthUser {
-  fullName: string;
-  username: string;
-  isAdmin: boolean;
-}
-
-export interface AuthContextType {
-  isAuthenticated: boolean;
-  user: AuthUser | null;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  user: null,
-  login: async () => false,
-  logout: () => { },
-});
-
-// Custom hook for auth context
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authState, setAuthState] = useState<{
-    isAuthenticated: boolean;
-    user: AuthUser | null;
-  }>({
-    isAuthenticated: false,
-    user: null,
-  });
-
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      apiClient.get("/users/me")
-        .then((res) => {
-          setAuthState({
-            isAuthenticated: true,
-            user: { fullName: res.data.full_name, username: res.data.username, isAdmin: res.data.is_admin },
-          });
-        })
-        .catch(() => {
-          localStorage.removeItem("access_token");
-          setAuthState({ isAuthenticated: false, user: null });
-        });
-    }
-  }, []);
-
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await apiClient.post("/auth/login", { username, password });
-      const { access_token } = response.data;
-      localStorage.setItem("access_token", access_token);
-
-      const userResponse = await apiClient.get("/users/me");
-      const userData = userResponse.data;
-
-      setAuthState({
-        isAuthenticated: true,
-        user: { fullName: userData.full_name, username: userData.username, isAdmin: userData.is_admin },
-      });
-      return true;
-    } catch (error) {
-      console.error("Login failed:", error);
-      return false;
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("access_token");
-    setAuthState({ isAuthenticated: false, user: null });
-  };
-
-  return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+export { AuthProvider, useAuth } from "@/shared/context/AuthContext";
+export type { AuthUser, AuthContextType } from "@/shared/context/AuthContext";
 
 export interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -98,7 +16,13 @@ export interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { isAuthenticated, user, logout } = useAuth();
+  const { mode, toggleColorMode } = useColorMode();
+  const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
+
+  let initialGuideTab = 0;
+  if (location.pathname.startsWith("/jobs")) initialGuideTab = 1;
+  else if (location.pathname.startsWith("/glossary")) initialGuideTab = 2;
 
   // Avatar menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -116,171 +40,207 @@ export function Header({ onToggleSidebar }: HeaderProps) {
     <>
       <AppBar
         position="sticky"
-      color="inherit"
-      elevation={0}
-      sx={{
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        backdropFilter: "blur(12px)",
-        borderBottom: `1px solid ${colorTokens.neutral200}`,
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        boxShadow: "none",
-        height: "64px",
-      }}
-    >
-      <Toolbar
-        disableGutters
+        color="inherit"
+        elevation={0}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          height: "100%",
-          minHeight: "64px",
-          px: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: mode === "dark" ? "rgba(11, 19, 43, 0.92)" : "rgba(255, 255, 255, 0.92)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid",
+          borderColor: mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          boxShadow: mode === "dark" ? "0 4px 25px rgba(0, 0, 0, 0.4)" : "0 2px 15px rgba(0, 0, 0, 0.05)",
+          height: "64px",
         }}
       >
-        {/* Logo and Title */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexGrow: 1 }}>
-          {onToggleSidebar && (
-            <IconButton
-              onClick={onToggleSidebar}
+        <Toolbar
+          disableGutters
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "100%",
+            minHeight: "64px",
+            px: { xs: 2, sm: 3, md: 4 },
+          }}
+        >
+          {/* Logo and Title */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexGrow: 1 }}>
+            {onToggleSidebar && (
+              <IconButton
+                onClick={onToggleSidebar}
+                sx={{
+                  mr: 0.5,
+                  color: "text.secondary",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    color: "#10B981",
+                    backgroundColor: "rgba(16, 185, 129, 0.1)",
+                  },
+                }}
+                aria-label="Toggle sidebar"
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Box
+              component={RouterLink}
+              to="/"
               sx={{
-                mr: 0.5,
-                color: colorTokens.neutral600,
+                display: "flex",
+                alignItems: "center",
+                textDecoration: "none",
                 cursor: "pointer",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  color: colorTokens.wine500,
-                  backgroundColor: "rgba(0, 148, 157, 0.04)",
-                },
+                gap: 1.5,
               }}
-              aria-label="Toggle sidebar"
             >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Box
-            component={RouterLink}
-            to="/"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              textDecoration: "none",
-              cursor: "pointer",
-              gap: 1.5,
-            }}
-          >
-            <img
-              src={tranlixLogo}
-              alt="Tranlix Logo"
-              style={{
-                height: "38px",
-                width: "auto",
-              }}
-            />
-            <Box>
-              <Typography
-                variant="h6"
+              <Box
                 sx={{
-                  fontWeight: 700,
-                  fontFamily: '"Lexend", sans-serif',
-                  color: colorTokens.wine500,
-                  lineHeight: 1.2,
-                  fontSize: "1rem",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "8px",
+                  bgcolor: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 0.5,
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15)",
                 }}
               >
-                Tranlix
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  display: "block",
-                  color: colorTokens.neutral500,
-                  fontFamily: '"Source Sans 3", sans-serif',
-                  fontSize: "0.75rem",
-                }}
-              >
-                Hệ thống dịch tài liệu đa ngôn ngữ
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* User Info & Avatar / Login Button */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          {isAuthenticated ? (
-            <>
-              <Tooltip title="Hướng dẫn sử dụng">
-                <IconButton
-                  onClick={() => setHelpOpen(true)}
+                <Box
+                  component="img"
+                  src="/logo.png"
+                  alt="Tranlix Logo"
                   sx={{
-                    color: colorTokens.neutral600,
-                    cursor: "pointer",
-                    "&:hover": {
-                      color: colorTokens.wine500,
-                      backgroundColor: "rgba(0, 148, 157, 0.04)",
-                    },
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
                   }}
-                >
-                  <HelpOutlined />
-                </IconButton>
-              </Tooltip>
-              <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
+                />
+              </Box>
+              <Box>
                 <Typography
-                  variant="body2"
+                  variant="h6"
                   sx={{
-                    fontWeight: 600,
-                    color: colorTokens.neutral800,
-                    lineHeight: 1.2,
+                    fontWeight: 400,
+                    fontFamily: '"Lexend", sans-serif',
+                    color: "text.primary",
+                    lineHeight: 1.1,
+                    fontSize: "1.2rem",
+                    letterSpacing: "-0.5px",
                   }}
                 >
-                  {user?.fullName || "User"}
+                  TRANLIX
                 </Typography>
                 <Typography
                   variant="caption"
                   sx={{
-                    color: colorTokens.neutral500,
-                    fontFamily: "monospace",
+                    display: "block",
+                    color: "text.secondary",
+                    fontFamily: '"Play", sans-serif',
+                    fontSize: "0.72rem",
+                    fontWeight: 400,
                   }}
                 >
-                  @{user?.username || "user"}
+                  An toàn và Nguyên vẹn!
                 </Typography>
               </Box>
-              <Tooltip title="Tài khoản">
-                <IconButton
-                  onClick={handleAvatarClick}
-                  sx={{
-                    padding: 0,
-                    width: 40,
-                    height: 40,
-                    transition: "transform 0.2s ease",
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      transform: "scale(1.05)",
-                    },
-                  }}
-                  aria-label="account"
-                  aria-controls="account-menu"
-                  aria-haspopup="true"
-                  aria-expanded={open ? "true" : undefined}
-                >
-                  <Avatar
+            </Box>
+          </Box>
+
+          {/* User Info & Avatar / Theme Toggle */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Tooltip title={mode === "dark" ? "Chuyển sang Chế độ Sáng" : "Chuyển sang Chế độ Tối"}>
+              <IconButton
+                onClick={toggleColorMode}
+                sx={{
+                  color: "text.secondary",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    color: "#10B981",
+                    backgroundColor: "rgba(16, 185, 129, 0.1)",
+                    transform: "rotate(15deg)",
+                  },
+                }}
+              >
+                {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
+              </IconButton>
+            </Tooltip>
+            {isAuthenticated ? (
+              <>
+                <Tooltip title="Hướng dẫn sử dụng">
+                  <IconButton
+                    onClick={() => setHelpOpen(true)}
                     sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: colorTokens.wine500,
-                      color: colorTokens.white,
-                      fontSize: "1rem",
-                      fontWeight: 600,
+                      color: "#64748B",
                       cursor: "pointer",
-                      border: "2px solid",
-                      borderColor: colorTokens.wine100,
-                      boxShadow: "0 2px 8px rgba(0, 148, 157, 0.15)",
+                      transition: "transform 0.15s ease",
+                      "&:hover": {
+                        color: "#B91C1C",
+                        backgroundColor: "rgba(185, 28, 28, 0.08)",
+                        transform: "scale(1.05)",
+                      },
                     }}
                   >
-                    {user?.fullName?.charAt(0).toUpperCase() || "U"}
-                  </Avatar>
-                </IconButton>
-              </Tooltip>
+                    <HelpOutlined />
+                  </IconButton>
+                </Tooltip>
+                <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 700,
+                      color: "text.primary",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {user?.fullName || "User"}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    @{user?.username || "user"}
+                  </Typography>
+                </Box>
+                <Tooltip title="Tài khoản">
+                  <IconButton
+                    onClick={handleAvatarClick}
+                    sx={{
+                      padding: 0,
+                      width: 40,
+                      height: 40,
+                      transition: "transform 0.15s ease",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                    aria-label="account"
+                    aria-controls="account-menu"
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: "#10B981",
+                        color: "#FFFFFF",
+                        fontSize: "1rem",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        border: "2px solid rgba(16, 185, 129, 0.4)",
+                        boxShadow: "0 2px 10px rgba(16, 185, 129, 0.3)",
+                      }}
+                    >
+                      {user?.fullName?.charAt(0).toUpperCase() || "U"}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
 
               {/* Avatar Dropdown Menu (Only rendered when logged in) */}
               <Menu
@@ -298,43 +258,49 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 sx={{
                   mt: 1.5,
                   "& .MuiPaper-root": {
-                    minWidth: 200,
-                    borderRadius: "16px",
-                    border: `1px solid ${colorTokens.neutral200}`,
-                    boxShadow: "0 10px 40px rgba(27, 75, 109, 0.08)",
-                    p: 0.5,
+                    minWidth: 220,
+                    borderRadius: "6px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                    boxShadow: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "0 10px 30px rgba(0, 0, 0, 0.6)"
+                        : "0 8px 24px rgba(0, 0, 0, 0.12)",
+                    p: 0.8,
                   },
                 }}
               >
-                <MenuItem disabled sx={{ fontSize: "0.875rem", py: 1 }}>
+                <MenuItem disabled sx={{ fontSize: "0.875rem", py: 1.2, opacity: "1 !important" }}>
                   <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: colorTokens.neutral800 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: "text.primary", fontFamily: '"Lexend", sans-serif' }}>
                       {user?.fullName || "User"}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: colorTokens.neutral500 }}>
+                    <Typography variant="caption" sx={{ color: "text.secondary", fontFamily: "monospace" }}>
                       @{user?.username || "user"}
                     </Typography>
                   </Box>
                 </MenuItem>
-                {user?.isAdmin && (
-                  <MenuItem
-                    component={RouterLink}
-                    to="/admin/users"
-                    onClick={handleAvatarClose}
-                    sx={{
-                      fontSize: "0.875rem",
-                      borderRadius: "8px",
-                      py: 1,
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 148, 157, 0.04)",
-                      },
-                    }}
-                  >
-                    <AdminPanelSettingsOutlined sx={{ fontSize: 20, mr: 1 }} />
-                    Quản trị tài khoản
-                  </MenuItem>
-                )}
-                <Divider sx={{ my: 0.5, borderColor: colorTokens.neutral100 }} />
+                <Divider sx={{ my: 0.5 }} />
+                <MenuItem
+                  component={RouterLink}
+                  to="/admin/users"
+                  onClick={handleAvatarClose}
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: "text.primary",
+                    fontWeight: 600,
+                    borderRadius: "4px",
+                    py: 1,
+                    "&:hover": {
+                      backgroundColor: "rgba(16, 185, 129, 0.12)",
+                      color: "#10B981",
+                    },
+                  }}
+                >
+                  <ManageAccountsOutlined sx={{ fontSize: 20, mr: 1, color: "#10B981" }} />
+                  Quản lý tài khoản
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     handleAvatarClose();
@@ -343,10 +309,11 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                   sx={{
                     fontSize: "0.875rem",
                     color: "error.main",
+                    fontWeight: 600,
                     borderRadius: "8px",
                     py: 1,
                     "&:hover": {
-                      backgroundColor: "rgba(220, 38, 38, 0.04)",
+                      backgroundColor: "rgba(220, 38, 38, 0.06)",
                     },
                   }}
                 >
@@ -383,45 +350,11 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       </Toolbar>
     </AppBar>
 
-    <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontFamily: '"Lexend", sans-serif', fontWeight: 600 }}>
-        Hướng dẫn sử dụng hệ thống dịch thuật Tranlix
-      </DialogTitle>
-      <DialogContent dividers sx={{ pb: 3 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: colorTokens.neutral800 }}>
-          1. Tải lên tài liệu
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
-          Nhấn nút <strong>"Tải lên tài liệu"</strong> ở trang chủ để chọn một hoặc nhiều tệp cần dịch (hỗ trợ .docx, .doc, .pptx, .ppt, .xlsx, .xls, .pdf). Bạn có thể tải lên tối đa 3 tệp cùng một lúc.
-        </Typography>
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: colorTokens.neutral800 }}>
-          2. Cấu hình ngôn ngữ và thuật ngữ
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
-          Chọn ngôn ngữ đích cần dịch sang. Ngoài ra, bạn có thể chọn một hoặc nhiều bảng thuật ngữ để đảm bảo các từ khóa chuyên ngành được dịch chính xác theo ý muốn.
-        </Typography>
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: colorTokens.neutral800 }}>
-          3. Theo dõi tiến trình và Tải về
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
-          Sau khi nhấn <strong>"Bắt đầu dịch"</strong>, hệ thống sẽ tự động điều hướng sang tab <strong>"Lịch sử dịch"</strong>. Tại đây, bạn có thể kiểm tra trạng thái dịch của từng tệp, mở tài liệu để đối chiếu song song thông qua OnlyOffice, hoặc tải trực tiếp bản dịch về máy.
-        </Typography>
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: colorTokens.neutral800 }}>
-          4. Quản lý Thuật ngữ
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-          Sử dụng tab <strong>"Thuật ngữ"</strong> trên thanh menu để tạo mới các bộ từ điển cá nhân, thêm các cặp từ gốc - từ dịch tương ứng và lưu trữ phục vụ cho các lần dịch sau.
-        </Typography>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={() => setHelpOpen(false)} variant="contained" color="primary" sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}>
-          Đã hiểu
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <UserGuideDialog
+      open={helpOpen}
+      onClose={() => setHelpOpen(false)}
+      initialTab={initialGuideTab}
+    />
   </>
   );
 }

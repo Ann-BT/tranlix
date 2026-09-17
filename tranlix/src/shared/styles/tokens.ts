@@ -4,35 +4,75 @@
  */
 
 export const colorTokens = {
-  // Wine scale (primary brand colors — based on #6E2030)
-  wine50:  '#FBE9ED',
-  wine100: '#F5D1D8',
-  wine200: '#EBADBA',
-  wine300: '#DD7E91',
-  wine400: '#B3324C',
-  wine500: '#6E2030',
-  wine600: '#5C1927',
-  wine700: '#49131E',
-  wine800: '#350D15',
-  wine900: '#21080D',
+  // Crimson Coral Red primary scale (Youthful Modern Red)
+  wine50:  '#FFF1F2',
+  wine100: '#FFE4E6',
+  wine200: '#FECDD3',
+  wine300: '#FDA4AF',
+  wine400: '#FB7185',
+  wine500: '#F43F5E',
+  wine600: '#E11D48', // Main Brand Red
+  wine700: '#BE123C',
+  wine800: '#9F1239',
+  wine900: '#881337',
 
-  // Blue scale (secondary colors)
-  blue50:  '#EAF2F8',
-  blue100: '#D0E3F0',
-  blue200: '#99C6E1',
-  blue300: '#61A9D2',
-  blue400: '#2A8CC3',
-  blue500: '#1B4B6D',
-  blue600: '#163D59',
-  blue700: '#102F45',
-  blue800: '#0B2131',
-  blue900: '#05131D',
+  // Secondary Indigo / Violet scale for non-error balance
+  blue50:  '#EEF2FF',
+  blue100: '#E0E7FF',
+  blue200: '#C7D2FE',
+  blue300: '#A5B4FC',
+  blue400: '#818CF8',
+  blue500: '#6366F1',
+  blue600: '#4F46E5',
+  blue700: '#4338CA',
+  blue800: '#3730A3',
+  blue900: '#312E81',
 
-  // Neutral scale (backgrounds, surfaces)
+  // Primary Brand scale — Modern Crimson Coral Red (#E11D48)
+  brandRed50:  '#FFF1F2',
+  brandRed100: '#FFE4E6',
+  brandRed500: '#E11D48', // Crisp Coral Red
+  brandRed600: '#BE123C',
+  brandRed700: '#9F1239',
+
+  // Secondary Brand scale — Deep Slate Navy (#0F172A)
+  brandNavy50:  '#F8FAFC',
+  brandNavy100: '#F1F5F9',
+  brandNavy500: '#1E293B',
+  brandNavy800: '#0F172A',
+  brandNavy900: '#020617',
+
+  // Accent Gold / Coral Amber scale
+  accentGold:      '#F59E0B',
+  accentGoldLight: '#FEF3C7',
+
+  // Security Emerald Green scale
+  vneidGreen50:  '#ECFDF5',
+  vneidGreen100: '#D1FAE5',
+  vneidGreen500: '#10B981',
+  vneidGreen600: '#059669',
+  vneidGreen700: '#047857',
+
+  // Backward-compatibility aliases for legacy code
+  policeRed50:  '#FFF1F2',
+  policeRed100: '#FFE4E6',
+  policeRed500: '#E11D48',
+  policeRed600: '#BE123C',
+  policeRed700: '#9F1239',
+
+  policeNavy50:  '#F8FAFC',
+  policeNavy500: '#1E293B',
+  policeNavy800: '#0F172A',
+  policeNavy900: '#020617',
+
+  emblemGold:      '#F59E0B',
+  emblemGoldLight: '#FEF3C7',
+
+  // Neutral slate scale
   neutral50:  '#F8FAFC',
   neutral100: '#F1F5F9',
   neutral200: '#E2E8F0',
-  neutral300: '#D1D5DB',
+  neutral300: '#CBD5E1',
   neutral400: '#94A3B8',
   neutral500: '#64748B',
   neutral600: '#475569',
@@ -45,11 +85,11 @@ export const colorTokens = {
   black: '#000000',
 
   // Status colors
-  success: '#16A34A',
+  success: '#10B981',
   warning: '#F59E0B',
-  error: '#DC2626',
-  info: '#0284C7',
-} as const;
+  error: '#EF4444',
+  info: '#3B82F6',
+};
 
 export const spacing = {
   xs: '4px',
@@ -71,7 +111,7 @@ export const borderRadius = {
 export const typographyTokens = {
   fontFamily: {
     primary: '"Plus Jakarta Sans", "Roboto", "Helvetica", "Arial", sans-serif',
-    display: '"Plus Jakarta Sans", "Roboto", "Helvetica", "Arial", sans-serif',
+    display: '"Lexend", "Plus Jakarta Sans", "Roboto", "Helvetica", "Arial", sans-serif',
   },
   fontSize: {
     xs: '0.75rem',

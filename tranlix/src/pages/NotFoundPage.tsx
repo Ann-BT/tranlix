@@ -69,7 +69,7 @@ export function NotFoundPage() {
           variant="body2"
           sx={{
             color: colorTokens.neutral500,
-            fontFamily: '"Source Sans 3", sans-serif',
+            fontFamily: '"Lexend", sans-serif',
             mb: 4,
             lineHeight: 1.5,
           }}

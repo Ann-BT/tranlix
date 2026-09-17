@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Box, Container, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { Navigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
-import vietanLogo from "@/core/assets/vietan_logo.png";
 import { Header, useAuth } from "./Header";
 import { Sidebar } from "./Sidebar";
 
@@ -31,9 +30,9 @@ export function AppLayout() {
       {/* Main Content Area with Sidebar */}
       <Box sx={{ display: "flex", flexGrow: 1, height: "calc(100vh - 64px)", overflow: "hidden" }}>
         {/* Sidebar */}
-        <Sidebar collapsed={sidebarCollapsed} />
+        <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} />
         
-        {/* Scrollable Right Content Panel */}
+        {/* Scrollable Right Content Panel with Tactile Caro Paper Grid & Noise Texture */}
         <Box
           sx={{
             flexGrow: 1,
@@ -43,112 +42,38 @@ export function AppLayout() {
             overflowY: "auto",
             position: "relative",
             overflowX: "hidden",
+            backgroundColor: (theme) => (theme.palette.mode === "dark" ? "#070B12" : "#FAF8F5"),
+            backgroundImage: (theme) =>
+              theme.palette.mode === "dark"
+                ? `
+                  linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                  radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 65%),
+                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E")
+                `
+                : `
+                  linear-gradient(to right, rgba(0, 0, 0, 0.045) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(0, 0, 0, 0.045) 1px, transparent 1px),
+                  radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.95) 0%, transparent 75%),
+                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.045'/%3E%3C/svg%3E")
+                `,
+            backgroundSize: "24px 24px, 24px 24px, 100% 100%, 180px 180px",
+            color: "text.primary",
           }}
         >
-          {/* Decorative background color blobs */}
+          {/* Main Content Area - Full width & height flexible canvas */}
           <Box
-            sx={{
-              position: "absolute",
-              top: "-150px",
-              right: "-150px",
-              width: "500px",
-              height: "500px",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(0, 148, 157, 0.05) 0%, rgba(0, 148, 157, 0) 70%)",
-              filter: "blur(60px)",
-              pointerEvents: "none",
-              zIndex: 0,
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: "150px",
-              left: "-150px",
-              width: "400px",
-              height: "400px",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(27, 75, 109, 0.03) 0%, rgba(27, 75, 109, 0) 70%)",
-              filter: "blur(50px)",
-              pointerEvents: "none",
-              zIndex: 0,
-            }}
-          />
-
-          {/* Main Content */}
-          <Container
             component="main"
-            maxWidth="xl"
             sx={{
               flexGrow: 1,
-              py: 4,
-              px: { xs: 2, sm: 3, md: 4 },
               display: "flex",
               flexDirection: "column",
-              zIndex: 1,
+              width: "100%",
+              minHeight: 0,
+              pb: 4,
             }}
           >
-            {/* Page Outlet */}
-            <Box sx={{ flexGrow: 1 }}>
-              <Outlet />
-            </Box>
-          </Container>
-          
-          {/* Footer */}
-          <Box
-            component="footer"
-            sx={{
-              py: 2.5,
-              px: { xs: 3, md: 4 },
-              backgroundColor: "background.paper",
-              borderTop: "1px solid",
-              borderColor: "divider",
-              mt: "auto",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 1.5,
-                textAlign: "center",
-              }}
-            >
-              {/* Copyright & Logo */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 1.5,
-                  flexWrap: "wrap",
-                }}
-              >
-                <Box
-                  component="img"
-                  src={vietanLogo}
-                  alt="Vietan Logo"
-                  sx={{
-                    height: 22,
-                    filter: "grayscale(20%)",
-                    opacity: 0.85,
-                  }}
-                />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    fontFamily: '"Plus Jakarta Sans", sans-serif',
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  © 2026 TRANLIX - Công ty TNHH Phát triển và Đầu tư Việt An
-                </Typography>
-              </Box>
-            </Box>
+            <Outlet />
           </Box>
         </Box>
       </Box>

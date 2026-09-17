@@ -3,6 +3,7 @@
  */
 
 export { theme } from './theme';
+export { ColorModeProvider, useColorMode } from './ColorModeContext';
 export { colorTokens, spacing, borderRadius, typographyTokens } from './tokens';
 export { palette } from './palette';
 export { typography } from './typography';

@@ -57,7 +57,7 @@ export interface RecentJob {
 // left out of pyproject.toml, see tranlix-platform/CLAUDE.md), not a
 // temporary restriction like PDF's was.
 export const SUPPORTED_EXTENSIONS = [
-  ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".pdf",
+  ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".pdf", ".png", ".jpg", ".jpeg",
 ] as const;
 
 export const TARGET_LANGUAGES = [

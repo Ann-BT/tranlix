@@ -4,6 +4,8 @@ import {
   Button,
   Card,
   CircularProgress,
+  ClickAwayListener,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -30,6 +32,8 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BookIcon from "@mui/icons-material/MenuBook";
 import SaveIcon from "@mui/icons-material/Save";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { glossaryKeys } from "../hooks/useGlossaries";
@@ -69,12 +73,12 @@ function CreateGlossaryDialog({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontFamily: '"Lexend", sans-serif', fontWeight: 600 }}>
-        Tạo bảng thuật ngữ mới
+        Tạo bộ thuật ngữ chuyên ngành mới
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
-            label="Tên bảng thuật ngữ"
+            label="Tên bộ thuật ngữ chuyên ngành"
             value={name}
             onChange={(e) => setName(e.target.value)}
             fullWidth
@@ -134,87 +138,6 @@ function CreateGlossaryDialog({ open, onClose }: { open: boolean; onClose: () =>
   );
 }
 
-function AddTermRow({
-  source,
-  setSource,
-  target,
-  setTarget,
-  onAddPending,
-}: {
-  source: string;
-  setSource: (val: string) => void;
-  target: string;
-  setTarget: (val: string) => void;
-  onAddPending: (source: string, target: string) => void;
-}) {
-  const handleAdd = () => {
-    if (!source.trim() || !target.trim()) return;
-    onAddPending(source.trim(), target.trim());
-    setSource("");
-    setTarget("");
-  };
-
-  return (
-    <TableRow sx={{ bgcolor: "neutral.50" }}>
-      <TableCell sx={{ py: 1.5 }}>
-        <TextField
-          size="small"
-          placeholder="Thuật ngữ gốc"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          fullWidth
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-              bgcolor: "background.paper",
-            }
-          }}
-        />
-      </TableCell>
-      <TableCell sx={{ py: 1.5 }}>
-        <TextField
-          size="small"
-          placeholder="Thuật ngữ dịch"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          fullWidth
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-              bgcolor: "background.paper",
-            }
-          }}
-        />
-      </TableCell>
-      <TableCell sx={{ py: 1.5, width: 56, textAlign: "center" }}>
-        <Tooltip title="Thêm vào danh sách chờ">
-          <span>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={handleAdd}
-              disabled={!source.trim() || !target.trim()}
-              sx={{
-                bgcolor: !source.trim() || !target.trim() ? "action.disabledBackground" : "rgba(0, 148, 157, 0.08)",
-                "&:hover": {
-                  bgcolor: "primary.main",
-                  color: "white",
-                },
-                borderRadius: "8px",
-                width: 34,
-                height: 34,
-              }}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </TableCell>
-    </TableRow>
-  );
-}
 
 function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
   const { data: glossary, isLoading } = useGlossary(glossaryId);
@@ -235,11 +158,23 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
   }
   if (!glossary) return null;
 
+  const handleAddTerm = () => {
+    if (!source.trim() || !target.trim()) return;
+    setPendingTerms((prev) => [
+      ...prev,
+      { source: source.trim(), target: target.trim(), id: `${Date.now()}-${prev.length}` },
+    ]);
+    setSource("");
+    setTarget("");
+    setAddKey((k) => k + 1);
+  };
+
   const hasTypedTerm = source.trim() !== "" && target.trim() !== "";
   const canSave = pendingTerms.length > 0 || hasTypedTerm;
 
   return (
-    <Box sx={{ p: 2.5 }}>
+    <Box sx={{ p: 2 }}>
+      {/* Terms Table */}
       <TableContainer
         component={Paper}
         elevation={0}
@@ -248,7 +183,7 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
           borderColor: "divider",
           borderRadius: "12px",
           overflow: "hidden",
-          mb: 2.5,
+          mb: 1.5,
         }}
       >
         <Table size="small">
@@ -257,7 +192,8 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
               sx={{ 
                 "& th": { 
                   fontWeight: 700, 
-                  backgroundColor: "neutral.50",
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "dark" ? "#0F172A" : "#F8FAFC",
                   fontFamily: '"Lexend", sans-serif',
                   color: "text.secondary",
                   py: 1.5,
@@ -275,7 +211,7 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
               <TableRow key={term.id} hover>
                 <TableCell sx={{ py: 1.5, fontWeight: 500 }}>{term.source}</TableCell>
                 <TableCell sx={{ py: 1.5, fontWeight: 500 }}>{term.target}</TableCell>
-                <TableCell sx={{ py: 1.5 }}>
+                <TableCell sx={{ py: 1.5, textAlign: "center" }}>
                   <Tooltip title="Xóa thuật ngữ">
                     <IconButton
                       size="small"
@@ -296,22 +232,22 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
 
             {/* Staged/Pending Terms */}
             {pendingTerms.map((term) => (
-              <TableRow key={term.id} sx={{ backgroundColor: "rgba(0, 148, 157, 0.03)" }}>
-                <TableCell sx={{ py: 1.5, fontStyle: "italic", color: "primary.main", fontWeight: 600 }}>
+              <TableRow key={term.id} sx={{ backgroundColor: "rgba(16, 185, 129, 0.06)" }}>
+                <TableCell sx={{ py: 1.5, fontStyle: "italic", color: "#10B981", fontWeight: 700 }}>
                   {term.source}
                 </TableCell>
-                <TableCell sx={{ py: 1.5, fontStyle: "italic", color: "primary.main", fontWeight: 600 }}>
+                <TableCell sx={{ py: 1.5, fontStyle: "italic", color: "#10B981", fontWeight: 700 }}>
                   {term.target}
                 </TableCell>
-                <TableCell sx={{ py: 1.5 }}>
+                <TableCell sx={{ py: 1.5, textAlign: "center" }}>
                   <Tooltip title="Xóa khỏi danh sách chờ">
                     <IconButton
                       size="small"
                       color="warning"
                       onClick={() => setPendingTerms((prev) => prev.filter((t) => t.id !== term.id))}
                       sx={{
-                        bgcolor: "rgba(245, 158, 11, 0.04)",
-                        "&:hover": { bgcolor: "rgba(245, 158, 11, 0.1)" },
+                        bgcolor: "rgba(245, 158, 11, 0.08)",
+                        "&:hover": { bgcolor: "rgba(245, 158, 11, 0.18)" },
                       }}
                     >
                       <DeleteIcon fontSize="small" />
@@ -320,20 +256,6 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
                 </TableCell>
               </TableRow>
             ))}
-
-            <AddTermRow
-              key={addKey}
-              source={source}
-              setSource={setSource}
-              target={target}
-              setTarget={setTarget}
-              onAddPending={(s, t) => {
-                setPendingTerms((prev) => [
-                  ...prev,
-                  { source: s, target: t, id: `${Date.now()}-${prev.length}` },
-                ]);
-              }}
-            />
           </TableBody>
         </Table>
       </TableContainer>
@@ -342,24 +264,113 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
         <Box 
           sx={{ 
             textAlign: "center", 
-            py: 4, 
+            py: 3, 
             border: "1px dashed", 
             borderColor: "divider", 
             borderRadius: "12px",
-            bgcolor: "neutral.50",
-            mb: 2.5,
+            bgcolor: (theme) => (theme.palette.mode === "dark" ? "rgba(255,255,255,0.02)" : "#F8FAFC"),
+            mb: 2,
           }}
         >
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-            Chưa có thuật ngữ nào. Nhập vào dòng phía trên để thêm.
+            Chưa có thuật ngữ nào. Sử dụng khung thêm thuật ngữ bên dưới để tạo.
           </Typography>
         </Box>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2.5, gap: 2, alignItems: "center" }}>
+      {/* Prominent Add Term Section - Right Below Available Terms */}
+      <Paper
+        key={addKey}
+        elevation={0}
+        sx={{
+          p: 2,
+          borderRadius: "12px",
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark" ? "rgba(16, 185, 129, 0.08)" : "rgba(16, 185, 129, 0.04)",
+          border: "1.5px dashed",
+          borderColor: "#10B981",
+          mb: 2.5,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            fontFamily: '"Lexend", sans-serif',
+            color: "#10B981",
+            mb: 1.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            fontSize: "0.88rem",
+          }}
+        >
+          <AddIcon sx={{ fontSize: 18 }} />
+          Thêm thuật ngữ mới
+        </Typography>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: "center" }}>
+          <TextField
+            size="small"
+            placeholder="Thuật ngữ gốc (ví dụ: radiography)"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            fullWidth
+            onKeyDown={(e) => e.key === "Enter" && handleAddTerm()}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                bgcolor: "background.paper",
+                fontFamily: '"Lexend", sans-serif',
+              },
+            }}
+          />
+          <TextField
+            size="small"
+            placeholder="Thuật ngữ dịch (ví dụ: chụp X-quang)"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            fullWidth
+            onKeyDown={(e) => e.key === "Enter" && handleAddTerm()}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                bgcolor: "background.paper",
+                fontFamily: '"Lexend", sans-serif',
+              },
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddTerm}
+            disabled={!source.trim() || !target.trim()}
+            sx={{
+              borderRadius: "8px",
+              fontWeight: 700,
+              fontFamily: '"Lexend", sans-serif',
+              textTransform: "none",
+              backgroundColor: "#10B981",
+              color: "#FFFFFF",
+              px: 3,
+              minWidth: 100,
+              height: 40,
+              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+              "&:hover": {
+                backgroundColor: "#059669",
+              },
+            }}
+          >
+            Thêm
+          </Button>
+        </Stack>
+      </Paper>
+
+      {/* Save Action Footer */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, alignItems: "center" }}>
         {(pendingTerms.length > 0 || hasTypedTerm) && (
-          <Typography variant="caption" sx={{ color: "warning.main", fontWeight: 600 }}>
-            * Bạn có thuật ngữ mới chưa lưu. Nhấn "Lưu bảng thuật ngữ" để áp dụng.
+          <Typography variant="caption" sx={{ color: "warning.main", fontWeight: 700 }}>
+            * Bạn có thuật ngữ mới chưa lưu. Nhấn "Lưu thuật ngữ" để áp dụng.
           </Typography>
         )}
         <Button
@@ -400,14 +411,19 @@ function GlossaryDetail({ glossaryId }: { glossaryId: string }) {
           }}
           sx={{ 
             borderRadius: "8px", 
-            fontWeight: 600, 
+            fontWeight: 700, 
+            fontFamily: '"Lexend", sans-serif',
             textTransform: "none", 
             py: 1, 
             px: 3,
-            boxShadow: canSave ? "0 4px 12px rgba(22, 163, 74, 0.2)" : "none",
+            backgroundColor: canSave ? "#10B981" : undefined,
+            boxShadow: canSave ? "0 4px 14px rgba(16, 185, 129, 0.3)" : "none",
+            "&:hover": {
+              backgroundColor: canSave ? "#059669" : undefined,
+            },
           }}
         >
-          {isSaving ? "Đang lưu..." : "Lưu bảng thuật ngữ"}
+          {isSaving ? "Đang lưu..." : "Lưu thuật ngữ"}
         </Button>
       </Box>
     </Box>
@@ -419,17 +435,18 @@ export function GlossaryManager() {
   const deleteGlossary = useDeleteGlossary();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   // The API already scopes glossaries to the current user; no client-side filtering needed.
   const glossaries = Array.isArray(rawGlossaries) ? rawGlossaries : (rawGlossaries as any)?.items || [];
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={1.5}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <BookIcon sx={{ color: "primary.main" }} />
           <Typography variant="h6" sx={{ fontFamily: '"Lexend", sans-serif', fontWeight: 600 }}>
-            Bảng thuật ngữ
+            Thuật ngữ chuyên ngành
           </Typography>
         </Box>
         <Button
@@ -438,7 +455,7 @@ export function GlossaryManager() {
           onClick={() => setCreateOpen(true)}
           sx={{ borderRadius: 2, fontFamily: '"Lexend", sans-serif' }}
         >
-          Tạo bảng mới
+          Tạo bộ thuật ngữ mới
         </Button>
       </Box>
 
@@ -457,7 +474,7 @@ export function GlossaryManager() {
         >
           <BookIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
           <Typography variant="body2" color="text.secondary">
-            Chưa có bảng thuật ngữ nào.
+            Chưa có thuật ngữ chuyên ngành nào.
           </Typography>
           <Button
             variant="outlined"
@@ -465,7 +482,7 @@ export function GlossaryManager() {
             onClick={() => setCreateOpen(true)}
             sx={{ mt: 2, borderRadius: 2 }}
           >
-            Tạo bảng thuật ngữ đầu tiên
+            Tạo bộ thuật ngữ chuyên ngành đầu tiên
           </Button>
         </Card>
       )}
@@ -473,81 +490,150 @@ export function GlossaryManager() {
       {glossaries.map((g: any) => {
         const isOpen = selectedId === g.id;
         return (
-          <Card
+          <ClickAwayListener
             key={g.id}
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: isOpen ? "primary.main" : "divider",
-              transition: "border-color 0.2s",
-              boxShadow: isOpen ? "0 4px 20px rgba(0, 148, 157, 0.05)" : "none",
-            }}
+            onClickAway={() => { if (isOpen) setSelectedId(null); }}
           >
-            <Box
+            <Card
+              elevation={0}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                p: 2.5,
-                cursor: "pointer",
-                "&:hover": { backgroundColor: "action.hover" },
-                borderRadius: isOpen ? "12px 12px 0 0" : 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: isOpen ? "#10B981" : "divider",
+                transition: "border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: isOpen
+                  ? (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "0 10px 30px rgba(0, 0, 0, 0.5)"
+                        : "0 8px 24px rgba(16, 185, 129, 0.12)"
+                  : "none",
               }}
-              onClick={() => setSelectedId(isOpen ? null : g.id)}
             >
-              <BookIcon sx={{ color: isOpen ? "primary.main" : "text.secondary", flexShrink: 0 }} />
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography
-                  variant="body1"
-                  sx={{ 
-                    fontWeight: 600, 
-                    fontFamily: '"Lexend", sans-serif',
-                    color: isOpen ? "primary.main" : "text.primary",
-                    transition: "color 0.2s",
-                  }}
-                >
-                  {g.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  {formatLanguage(g.source_lang)} → {formatLanguage(g.target_lang)}
-                </Typography>
-              </Box>
-              <Tooltip title="Xóa bảng thuật ngữ">
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm(`Xóa bảng thuật ngữ "${g.name}"?`)) {
-                      deleteGlossary.mutate(g.id, {
-                        onSuccess: () => {
-                          if (selectedId === g.id) setSelectedId(null);
-                        },
-                      });
-                    }
-                  }}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  py: 1.5,
+                  px: 2.5,
+                  cursor: "pointer",
+                  "&:hover": { backgroundColor: "action.hover" },
+                  borderRadius: isOpen ? "12px 12px 0 0" : 3,
+                  transition: "border-radius 0.3s",
+                }}
+                onClick={() => setSelectedId(isOpen ? null : g.id)}
+              >
+                <BookIcon sx={{ color: isOpen ? "#10B981" : "text.secondary", flexShrink: 0, transition: "color 0.3s" }} />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 600,
+                      fontFamily: '"Lexend", sans-serif',
+                      color: isOpen ? "#10B981" : "text.primary",
+                      transition: "color 0.3s",
+                    }}
+                  >
+                    {g.name}
+                  </Typography>
+                  <Stack direction="row" spacing={0.6} sx={{ alignItems: "center", mt: 0.3, display: "inline-flex" }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      {formatLanguage(g.source_lang)}
+                    </Typography>
+                    <ArrowForwardIcon sx={{ fontSize: 13, color: "text.secondary" }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      {formatLanguage(g.target_lang)}
+                    </Typography>
+                  </Stack>
+                </Box>
+                <Tooltip title="Xóa bộ thuật ngữ">
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget({ id: g.id, name: g.name });
+                    }}
+                    sx={{
+                      bgcolor: "rgba(220, 38, 38, 0.04)",
+                      "&:hover": { bgcolor: "rgba(220, 38, 38, 0.1)" },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <KeyboardArrowDownIcon
                   sx={{
-                    bgcolor: "rgba(220, 38, 38, 0.04)",
-                    "&:hover": { bgcolor: "rgba(220, 38, 38, 0.1)" },
+                    color: isOpen ? "#10B981" : "text.secondary",
+                    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s",
                   }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
+                />
+              </Box>
 
-            {isOpen && (
-              <>
+              <Collapse in={isOpen} timeout={{ enter: 320, exit: 220 }} unmountOnExit={false}>
                 <Divider />
                 <Box sx={{ p: 0 }}>
                   <GlossaryDetail glossaryId={g.id} />
                 </Box>
-              </>
-            )}
-          </Card>
+              </Collapse>
+            </Card>
+          </ClickAwayListener>
         );
       })}
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3,
+              p: 1,
+              maxWidth: 420,
+              width: "100%",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, fontFamily: '"Lexend", sans-serif', pb: 1 }}>
+          Xác nhận xóa bộ thuật ngữ
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Bạn có chắc chắn muốn xóa bộ thuật ngữ <strong>"{deleteTarget?.name}"</strong>? Tất cả thuật ngữ bên trong sẽ bị xóa và không thể hoàn tác.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, pt: 1, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            variant="outlined"
+            color="inherit"
+            sx={{ borderRadius: 2, textTransform: "none" }}
+          >
+            Hủy bỏ
+          </Button>
+          <Button
+            onClick={() => {
+              if (deleteTarget) {
+                deleteGlossary.mutate(deleteTarget.id, {
+                  onSuccess: () => {
+                    if (selectedId === deleteTarget.id) setSelectedId(null);
+                    setDeleteTarget(null);
+                  },
+                });
+              }
+            }}
+            variant="contained"
+            color="error"
+            autoFocus
+            disabled={deleteGlossary.isPending}
+            sx={{ borderRadius: 2, textTransform: "none", bgcolor: "#DC2626", "&:hover": { bgcolor: "#B91C1C" } }}
+          >
+            {deleteGlossary.isPending ? "Đang xóa..." : "Xóa bộ thuật ngữ"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <CreateGlossaryDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </Stack>

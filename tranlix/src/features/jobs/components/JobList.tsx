@@ -3,9 +3,9 @@ import {
   Paper, Stack, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Typography,
   TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel,
-  TablePagination, CircularProgress, Chip
+  Pagination, CircularProgress, Chip
 } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -15,6 +15,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useNavigate } from "react-router-dom";
 import { TARGET_LANGUAGES } from "@features/translation";
 import { formatJobDuration } from "@shared/lib/formatDuration";
@@ -43,6 +44,23 @@ function formatDate(dateStr: string): string {
 const formatLanguage = (langCode: string) => {
   return TARGET_LANGUAGES.find((l) => l.code === langCode)?.label ?? langCode;
 };
+
+function getFileTypeLabel(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  const map: Record<string, string> = {
+    pdf: "PDF",
+    docx: "Word (DOCX)",
+    doc: "Word (DOC)",
+    pptx: "PowerPoint (PPTX)",
+    ppt: "PowerPoint (PPT)",
+    xlsx: "Excel (XLSX)",
+    xls: "Excel (XLS)",
+    png: "Hình ảnh (PNG)",
+    jpg: "Hình ảnh (JPG)",
+    jpeg: "Hình ảnh (JPEG)",
+  };
+  return map[ext] ?? ext.toUpperCase();
+}
 
 interface JobRowProps {
   job: Job;
@@ -82,20 +100,27 @@ function JobRow({ job, onCompare }: JobRowProps) {
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", flexWrap: "nowrap" }}>
               <Button
                 size="small"
-                variant="outlined"
-                color="secondary"
+                variant="contained"
                 startIcon={<CompareArrowsIcon />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onCompare(job);
                 }}
                 sx={{
-                  fontWeight: 600,
+                  fontWeight: 700,
                   borderRadius: "6px",
                   textTransform: "none",
                   py: 0.5,
+                  px: 1.8,
                   whiteSpace: "nowrap",
                   flexShrink: 0,
+                  backgroundColor: "#2563EB",
+                  color: "#FFFFFF",
+                  boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
+                  "&:hover": {
+                    backgroundColor: "#1D4ED8",
+                    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.4)",
+                  },
                 }}
               >
                 So sánh
@@ -134,22 +159,35 @@ function JobRow({ job, onCompare }: JobRowProps) {
               </Typography>
               <Grid container spacing={3} sx={{ mb: 1 }}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                    Mã công việc (Job ID)
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: "monospace", color: "text.primary", wordBreak: "break-all" }}>
-                    {job.id}
-                  </Typography>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
+                      Loại tệp
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 500 }}>
+                      {getFileTypeLabel(job.source_filename)}
+                    </Typography>
+                  </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.3 }}>
                     Thời gian thực hiện
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "text.primary" }}>
-                    <strong>Bắt đầu:</strong> {formatDate(job.created_at)}
-                    <br />
-                    <strong>Thời gian chạy:</strong> {job.status === "completed" || job.status === "failed" ? formatJobDuration(job) : "Đang xử lý..."}
-                  </Typography>
+                  <Stack spacing={0.4}>
+                    <Typography variant="body2" sx={{ color: "text.primary" }}>
+                      <strong>Bắt đầu:</strong> {formatDate(job.created_at)}
+                    </Typography>
+                    {(job.status === "completed" || job.status === "failed") && (
+                      <Typography variant="body2" sx={{ color: "text.primary" }}>
+                        <strong>Hoàn thành:</strong> {formatDate(job.updated_at)}
+                      </Typography>
+                    )}
+                    <Typography variant="body2" sx={{ color: "text.primary" }}>
+                      <strong>Thời gian xử lý:</strong>{" "}
+                      {job.status === "completed" || job.status === "failed"
+                        ? formatJobDuration(job)
+                        : "Đang xử lý..."}
+                    </Typography>
+                  </Stack>
                 </Grid>
               </Grid>
 
@@ -204,11 +242,17 @@ export function JobList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "processing" | "failed">("all");
   const [langFilter, setLangFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState(""); // yyyy-MM-dd, derived from dateParts
+  const [dateParts, setDateParts] = useState({ day: "", month: "", year: "" });
+  const dayRef = useRef<HTMLInputElement>(null);
+  const monthRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+  const calendarRef = useRef<HTMLInputElement>(null);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "filename_asc" | "filename_desc">("newest");
 
   // Pagination states
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Dynamic statistics
   const counts = useMemo(() => {
@@ -232,7 +276,74 @@ export function JobList() {
     setSearchQuery("");
     setStatusFilter("all");
     setLangFilter("all");
+    setDateFilter("");
+    setDateParts({ day: "", month: "", year: "" });
     setSortBy("newest");
+    setPage(0);
+  };
+
+  // Build dateFilter whenever dateParts change
+  const applyDateFilter = (next: { day: string; month: string; year: string }) => {
+    const { day, month, year } = next;
+    const d = parseInt(day), m = parseInt(month), y = parseInt(year);
+    if (day && month && year && year.length === 4
+      && d >= 1 && d <= 31 && m >= 1 && m <= 12
+      && y >= 2020 && y <= new Date().getFullYear()) {
+      const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      const test = new Date(iso);
+      if (!isNaN(test.getTime()) && test.toISOString().startsWith(iso)) {
+        setDateFilter(iso);
+        return;
+      }
+    }
+    setDateFilter("");
+  };
+
+  const handleDatePartChange = (part: "day" | "month" | "year", raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    let value = digits;
+
+    if (part === "day") {
+      value = digits.slice(0, 2);
+      // Single digit ≥ 4 can only be 04-09, auto-pad and advance
+      if (value.length === 1 && parseInt(value) >= 4) {
+        value = "0" + value;
+      }
+      if (value.length === 2) setTimeout(() => monthRef.current?.focus(), 0);
+    } else if (part === "month") {
+      value = digits.slice(0, 2);
+      // Single digit ≥ 2 can only be 02-09, auto-pad and advance
+      if (value.length === 1 && parseInt(value) >= 2) {
+        value = "0" + value;
+      }
+      if (value.length === 2) setTimeout(() => yearRef.current?.focus(), 0);
+    } else {
+      value = digits.slice(0, 4);
+    }
+
+    const next = { ...dateParts, [part]: value };
+    setDateParts(next);
+    applyDateFilter(next);
+    setPage(0);
+  };
+
+  // Backspace: when field is empty, go back to previous field and trim its last char
+  const handleDateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, part: "day" | "month" | "year") => {
+    if (e.key !== "Backspace") return;
+    const current = dateParts[part];
+    if (current !== "") return; // let the browser handle normal deletion
+    e.preventDefault();
+    if (part === "month") {
+      const next = { ...dateParts, day: dateParts.day.slice(0, -1) };
+      setDateParts(next);
+      applyDateFilter(next);
+      dayRef.current?.focus();
+    } else if (part === "year") {
+      const next = { ...dateParts, month: dateParts.month.slice(0, -1) };
+      setDateParts(next);
+      applyDateFilter(next);
+      monthRef.current?.focus();
+    }
     setPage(0);
   };
 
@@ -243,7 +354,6 @@ export function JobList() {
       .filter((job) => {
         const matchSearch =
           job.source_filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.target_lang.toLowerCase().includes(searchQuery.toLowerCase());
 
         let matchStatus = true;
@@ -257,7 +367,18 @@ export function JobList() {
 
         const matchLang = langFilter === "all" || job.target_lang === langFilter;
 
-        return matchSearch && matchStatus && matchLang;
+        const matchDate = (() => {
+          if (!dateFilter) return true;
+          const d = new Date(job.created_at);
+          const jobDate = [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, "0"),
+            String(d.getDate()).padStart(2, "0"),
+          ].join("-");
+          return jobDate === dateFilter;
+        })();
+
+        return matchSearch && matchStatus && matchLang && matchDate;
       })
       .sort((a, b) => {
         if (sortBy === "newest") {
@@ -274,7 +395,7 @@ export function JobList() {
         }
         return 0;
       });
-  }, [data?.items, searchQuery, statusFilter, langFilter, sortBy]);
+  }, [data?.items, searchQuery, statusFilter, langFilter, sortBy, dateFilter]);
 
   const paginatedJobs = useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -347,7 +468,7 @@ export function JobList() {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Tìm kiếm tên tệp, mã Job..."
+                placeholder="Tìm kiếm tên tệp..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -408,6 +529,108 @@ export function JobList() {
               </FormControl>
             </Box>
 
+            {/* Date Filter — Ngày / Tháng / Năm */}
+            <Box sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
+              <Box
+                sx={{
+                  border: "1px solid",
+                  borderColor: dateFilter ? "primary.main" : "divider",
+                  borderRadius: "8px",
+                  bgcolor: "background.default",
+                  display: "flex",
+                  alignItems: "center",
+                  px: 1.5,
+                  py: "5px",
+                  gap: 0.5,
+                  height: "40px",
+                  "&:hover": { borderColor: "text.primary" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", flex: 1, gap: 0.5 }}>
+                  <input
+                    ref={dayRef}
+                    placeholder="Ngày"
+                    value={dateParts.day}
+                    maxLength={2}
+                    onChange={(e) => handleDatePartChange("day", e.target.value)}
+                    onKeyDown={(e) => handleDateKeyDown(e, "day")}
+                    style={{
+                      width: 38, border: "none", outline: "none", background: "transparent",
+                      fontSize: "0.875rem", textAlign: "center", color: "inherit",
+                    }}
+                  />
+                  <span style={{ color: "#9CA3AF", fontSize: "0.875rem" }}>/</span>
+                  <input
+                    ref={monthRef}
+                    placeholder="Tháng"
+                    value={dateParts.month}
+                    maxLength={2}
+                    onChange={(e) => handleDatePartChange("month", e.target.value)}
+                    onKeyDown={(e) => handleDateKeyDown(e, "month")}
+                    style={{
+                      width: 44, border: "none", outline: "none", background: "transparent",
+                      fontSize: "0.875rem", textAlign: "center", color: "inherit",
+                    }}
+                  />
+                  <span style={{ color: "#9CA3AF", fontSize: "0.875rem" }}>/</span>
+                  <input
+                    ref={yearRef}
+                    placeholder="Năm"
+                    value={dateParts.year}
+                    maxLength={4}
+                    onChange={(e) => handleDatePartChange("year", e.target.value)}
+                    onKeyDown={(e) => handleDateKeyDown(e, "year")}
+                    style={{
+                      width: 44, border: "none", outline: "none", background: "transparent",
+                      fontSize: "0.875rem", textAlign: "center", color: "inherit",
+                    }}
+                  />
+                </Box>
+                {/* Calendar icon triggers hidden native date picker */}
+                {!dateFilter && (
+                  <IconButton size="small" sx={{ p: 0.3 }} onClick={() => calendarRef.current?.showPicker?.() ?? calendarRef.current?.click()}>
+                    <CalendarTodayIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+                  </IconButton>
+                )}
+                {dateFilter && (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setDateFilter("");
+                      setDateParts({ day: "", month: "", year: "" });
+                      setPage(0);
+                    }}
+                    sx={{ p: 0.3 }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                )}
+                {/* Hidden native date input for calendar picker */}
+                <input
+                  ref={calendarRef}
+                  type="date"
+                  min="2020-01-01"
+                  max={new Date().toISOString().split("T")[0]}
+                  value={dateFilter}
+                  onChange={(e) => {
+                    const val = e.target.value; // yyyy-MM-dd
+                    if (val) {
+                      const [y, m, d] = val.split("-");
+                      setDateParts({ day: d, month: m, year: y });
+                      setDateFilter(val);
+                      setPage(0);
+                    }
+                  }}
+                  style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }}
+                />
+              </Box>
+              {dateParts.day && dateParts.month && dateParts.year && dateParts.year.length === 4 && !dateFilter && (
+                <Typography variant="caption" color="error" sx={{ ml: 0.5, mt: 0.3, display: "block" }}>
+                  Ngày không hợp lệ
+                </Typography>
+              )}
+            </Box>
+
             {/* Sort By Dropdown */}
             <Box sx={{ width: { xs: "100%", sm: "50%", md: "25%" } }}>
               <FormControl fullWidth size="small">
@@ -423,8 +646,8 @@ export function JobList() {
                   IconComponent={SwapVertIcon}
                   sx={{ borderRadius: "8px", bgcolor: "background.default", fontSize: "0.875rem" }}
                 >
-                  <MenuItem value="newest">Mới nhất trước</MenuItem>
-                  <MenuItem value="oldest">Cũ nhất trước</MenuItem>
+                  <MenuItem value="newest">Mới nhất</MenuItem>
+                  <MenuItem value="oldest">Cũ nhất</MenuItem>
                   <MenuItem value="filename_asc">Tên tệp (A-Z)</MenuItem>
                   <MenuItem value="filename_desc">Tên tệp (Z-A)</MenuItem>
                 </Select>
@@ -555,25 +778,28 @@ export function JobList() {
               borderColor: "divider",
               borderRadius: "12px 12px 0 0",
               overflowX: "auto",
-              overflowY: "auto",
-              maxHeight: "calc(100vh - 530px)",
             }}
           >
             <Table aria-label="job history table" stickyHeader>
               <TableHead 
                 sx={{ 
-                  bgcolor: "neutral.50",
                   "& th": {
-                    bgcolor: "neutral.50",
+                    bgcolor: (theme) => (theme.palette.mode === "dark" ? "#0F172A" : "#F1F5F9"),
+                    color: "text.secondary",
+                    fontWeight: 700,
+                    fontFamily: '"Lexend", sans-serif',
+                    borderBottom: "2px solid",
+                    borderColor: "divider",
+                    zIndex: 10,
                   }
                 }}
               >
                 <TableRow>
                   <TableCell sx={{ width: 60 }} />
-                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Tên file</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Ngôn ngữ dịch</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif' }}>Trạng thái</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700, color: "text.secondary", fontFamily: '"Lexend", sans-serif', pr: 3, width: 280, minWidth: 280 }}>Thao tác</TableCell>
+                  <TableCell>Tên file</TableCell>
+                  <TableCell>Ngôn ngữ dịch</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell align="right" sx={{ pr: 3, width: 280, minWidth: 280 }}>Thao tác</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -583,27 +809,117 @@ export function JobList() {
               </TableBody>
             </Table>
           </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            component={Paper}
-            elevation={0}
-            sx={{
-              border: "1px solid",
-              borderTop: "none",
-              borderColor: "divider",
-              borderRadius: "0 0 12px 12px",
-            }}
-            count={filteredJobs.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(_event, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => {
-              setRowsPerPage(parseInt(event.target.value, 10));
-              setPage(0);
-            }}
-            labelRowsPerPage="Số dòng mỗi trang:"
-            labelDisplayedRows={({ from, to, count }) => `${from}–${to} trong ${count}`}
-          />
+          {/* Custom Modern Pagination Bar */}
+          {(() => {
+            const total = filteredJobs.length;
+            const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+            const from = total === 0 ? 0 : page * rowsPerPage + 1;
+            const to = Math.min((page + 1) * rowsPerPage, total);
+
+            return (
+              <Paper
+                elevation={0}
+                sx={{
+                  position: "sticky",
+                  bottom: 0,
+                  zIndex: 100,
+                  p: 1.5,
+                  px: 2.5,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  border: "1px solid",
+                  borderTop: "none",
+                  borderColor: "divider",
+                  borderRadius: "0 0 12px 12px",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark" ? "#0F172A" : "#FFFFFF",
+                  boxShadow: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "0 -4px 20px rgba(0, 0, 0, 0.5)"
+                      : "0 -4px 16px rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    fontFamily: '"Lexend", sans-serif',
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  Hiển thị{" "}
+                  <Typography component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
+                    {from}–{to}
+                  </Typography>{" "}
+                  trong tổng số{" "}
+                  <Typography component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
+                    {total}
+                  </Typography>{" "}
+                  bản ghi
+                </Typography>
+
+                <Stack direction="row" spacing={2.5} sx={{ alignItems: "center" }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontFamily: '"Lexend", sans-serif',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Số dòng:
+                    </Typography>
+                    <Select
+                      size="small"
+                      value={rowsPerPage}
+                      onChange={(e) => {
+                        setRowsPerPage(Number(e.target.value));
+                        setPage(0);
+                      }}
+                      sx={{
+                        height: 32,
+                        borderRadius: "6px",
+                        fontSize: "0.82rem",
+                        fontFamily: '"Lexend", sans-serif',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {[5, 10, 25, 50].map((num) => (
+                        <MenuItem key={num} value={num} sx={{ fontSize: "0.82rem", fontFamily: '"Lexend", sans-serif' }}>
+                          {num}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Stack>
+
+                  <Pagination
+                    count={totalPages}
+                    page={page + 1}
+                    onChange={(_e, newPage) => setPage(newPage - 1)}
+                    color="primary"
+                    shape="rounded"
+                    size="small"
+                    sx={{
+                      "& .MuiPaginationItem-root": {
+                        fontFamily: '"Lexend", sans-serif',
+                        fontWeight: 600,
+                        fontSize: "0.82rem",
+                        borderRadius: "6px",
+                      },
+                      "& .Mui-selected": {
+                        backgroundColor: "#10B981 !important",
+                        color: "#FFFFFF",
+                      },
+                    }}
+                  />
+                </Stack>
+              </Paper>
+            );
+          })()}
         </>
       )}
     </Stack>
