@@ -32,16 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: AuthUser | null;
   }>(() => {
     const token = localStorage.getItem("access_token");
-    if (!token) {
-      localStorage.setItem("access_token", "demo-token");
-    }
+    const hasRealToken = Boolean(token && token !== "demo-token");
     return {
-      isAuthenticated: true,
-      user: {
-        fullName: "Người dùng Demo",
-        username: "demo",
-        isAdmin: true,
-      },
+      isAuthenticated: hasRealToken,
+      user: null,
     };
   });
 
@@ -54,20 +48,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthState({
             isAuthenticated: true,
             user: {
-              fullName: res.data.full_name,
+              fullName: res.data.full_name ?? res.data.username,
               username: res.data.username,
-              isAdmin: res.data.is_admin,
+              isAdmin: Boolean(res.data.is_admin),
             },
           });
         })
         .catch(() => {
+          // If token is invalid or expired on server, invalidate session
+          localStorage.removeItem("access_token");
           setAuthState({
-            isAuthenticated: true,
-            user: {
-              fullName: "Người dùng Demo",
-              username: "demo",
-              isAdmin: true,
-            },
+            isAuthenticated: false,
+            user: null,
           });
         });
     }

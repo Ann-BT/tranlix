@@ -160,7 +160,7 @@ function JobRow({ job, onCompare }: JobRowProps) {
                 borderColor: "divider",
               }}
             >
-              <Grid container spacing={3} alignItems="center">
+              <Grid container spacing={3} sx={{ alignItems: "center" }}>
                 {/* Left Side: Meta Badges */}
                 <Grid size={{ xs: 12, md: 7 }}>
                   <Stack spacing={1.5}>
