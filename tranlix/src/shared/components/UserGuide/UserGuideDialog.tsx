@@ -22,22 +22,22 @@ interface UserGuideDialogProps {
 }
 
 const TRANSLATE_STEPS = [
-  { step: "1. Tải tệp lên", text: "Kéo thả hoặc nhấp chọn tài liệu từ máy tính (.docx, .doc, .pptx, .ppt, .xlsx, .xls, .pdf, .png, .jpg, .jpeg)." },
-  { step: "2. Chọn ngôn ngữ", text: "Chọn ngôn ngữ đích cần dịch sang và chủ đề tài liệu tương ứng." },
-  { step: "3. Chọn bộ thuật ngữ", text: "Lựa chọn từ điển chuyên ngành cá nhân để cố định cách dịch các từ khóa quan trọng." },
-  { step: "4. Bắt đầu dịch", text: "Nhấn 'Bắt đầu dịch' để khởi tạo tiến trình và tự động chuyển sang trang Lịch sử hoạt động." },
+  { step: "1. Tải tệp lên", text: "Kéo thả hoặc nhấp chọn tối đa 3 tài liệu từ máy tính (.docx, .doc, .pptx, .ppt, .xlsx, .xls, .pdf, .png, .jpg, .jpeg)." },
+  { step: "2. Chọn ngôn ngữ & thuật ngữ", text: "Chọn ngôn ngữ đích cần dịch sang và chọn bộ thuật ngữ chuyên ngành (nếu có)." },
+  { step: "3. Tùy chỉnh tệp dịch", text: "Có thể chọn chủ đề tài liệu cho từng tệp hoặc bật chế độ 'Ép dùng OCR' nếu tệp dạng ảnh/scan." },
+  { step: "4. Bắt đầu dịch", text: "Nhấn 'Dịch ngay' để khởi tạo tiến trình dịch thuật." },
 ];
 
 const HISTORY_STEPS = [
-  { step: "1. Xem danh sách & Tiến trình", text: "Theo dõi trạng thái nhiệm vụ dịch thuật theo thời gian thực (Đang xử lý %, Hoàn thành, Lỗi)." },
-  { step: "2. Đối chiếu song song", text: "Nhấn 'Xem tài liệu' để xem và so sánh trực tiếp trang gốc và trang dịch trong OnlyOffice Viewer." },
-  { step: "3. Tải bản dịch về", text: "Nhấn 'Tải về' để lưu tệp bản dịch giữ nguyên cấu trúc và định dạng ban đầu." },
+  { step: "1. Quản lý & Lọc danh sách", text: "Tìm kiếm theo tên tệp, lọc theo trạng thái (Hoàn thành, Đang xử lý, Thất bại), ngôn ngữ hoặc chọn ngày." },
+  { step: "2. So sánh bản dịch", text: "Nhấn 'So sánh' đối với tệp đã hoàn thành để xem giao diện đối chiếu tài liệu." },
+  { step: "3. Tải bản dịch về", text: "Nhấn nút 'Tải về' để lưu tệp bản dịch giữ nguyên cấu trúc ban đầu." },
 ];
 
 const GLOSSARY_STEPS = [
-  { step: "1. Tạo bộ thuật ngữ mới", text: "Nhấn 'Tạo bộ thuật ngữ mới', nhập tên từ điển và chọn cặp ngôn ngữ nguồn - đích." },
-  { step: "2. Thêm cặp từ chuyên ngành", text: "Mở thẻ từ điển, nhập 'Thuật ngữ gốc' → 'Thuật ngữ dịch' rồi nhấn '+ Thêm'." },
-  { step: "3. Lưu bộ từ điển", text: "Nhấn 'Lưu thuật ngữ' để hoàn tất. Dữ liệu sẽ tự động khả dụng khi bạn dịch tài liệu." },
+  { step: "1. Tạo bộ thuật ngữ mới", text: "Nhấn 'Tạo bộ thuật ngữ mới', nhập tên và chọn cặp ngôn ngữ nguồn - đích." },
+  { step: "2. Thêm các cặp từ", text: "Trong bộ thuật ngữ đã chọn, nhập 'Thuật ngữ nguồn' và 'Thuật ngữ đích' rồi nhấn 'Thêm'." },
+  { step: "3. Áp dụng khi dịch", text: "Các bộ thuật ngữ được lưu sẽ xuất hiện ở mục chọn thuật ngữ khi khởi tạo lượt dịch mới." },
 ];
 
 export function UserGuideDialog({ open, onClose, initialTab = 0 }: UserGuideDialogProps) {
