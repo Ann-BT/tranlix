@@ -1128,7 +1128,7 @@ export function JobList() {
                   <Typography component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
                     {total}
                   </Typography>{" "}
-                  bản ghi
+                  file
                 </Typography>
 
                 <Stack direction="row" spacing={2.5} sx={{ alignItems: "center" }}>
